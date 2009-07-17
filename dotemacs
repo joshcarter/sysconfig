@@ -1,0 +1,471 @@
+(menu-bar-mode nil)
+(line-number-mode 1)
+(setq column-number-mode t)
+(setq load-path (cons "~/Library/Emacs" load-path))
+(load-file "~/Library/Emacs/josh-addons.el")
+
+;; gnuserv stuff
+(autoload 'gnuserv-start "gnuserv-compat" "Allow this Emacs process to be a server for client processes." t)
+(gnuserv-start)
+(setq gnuserv-frame (selected-frame))
+
+; (require 'gnuserv)
+; (load-file "c:/emacs/lisp/gnuserv.el")
+; (gnuserv-start)
+
+; diary, appt stuff
+; (display-time)
+; (add-hook 'diary-hook 'appt-make-list)
+
+; messin' with frames
+; (setq default-frame-alist
+;      '((cursor-color . "black")
+;	(cursor-type . box)
+;	(foreground-color . "black")
+;	(background-color . "cornsilk")
+;	(vertical-scroll-bars . right)
+;	(set-default-font "-*-Courier New-normal-r-*-*-12-120-*-*-c-*-*-ansi-")
+;	)
+;      )
+
+; swiped from http://www.dotemacs.de/dotfiles/JayakrishnanNair.emacs.html
+(global-set-key "`" 'match-paren)
+(defun match-paren (arg)
+  "Go to the matching parenthesis if on parenthesis otherwise insert %."
+  (interactive "p")
+  (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+        ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+        (t (self-insert-command (or arg 1)))))
+
+
+; set font for windoze
+; (set-default-font "-*-Lucida Console-normal-r-*-*-12-120-*-*-c-*-*-ansi-")
+
+; (set-default-font "-*-Courier New-normal-r-*-*-12-*-*-*-c-*-*-ansi-")
+
+; 20, WIN32
+; (setq win32-enable-italics t)  ; This must be done before font settings!
+; (set-face-font 'italic "-*-Courier New-normal-i-*-*-11-82-c-*-*-ansi-")
+; (set-face-font 'bold-italic "-*-Courier New-bold-i-*-*-11-82-c-*-*-ansi-")
+
+; WIN32
+; (using-unix-filesystems t)
+
+; ispell4
+(autoload 'ispell-word "ispell"
+"Check spelling of word at or before point" t)
+(autoload 'ispell-complete-word "ispell"
+"Complete word at or before point" t)
+(autoload 'ispell-region "ispell"
+"Check spelling of every word in the region" t)
+(autoload 'ispell-buffer "ispell"
+"Check spelling of every word in the buffer" t)
+(setq-default ispell-program-name "/Library/PreferencePanes/Spelling.prefPane/Contents/MacOS/cocoAspell")
+;(setq ispell-command "")
+;	  ispell-command-options (list "-d" "/usr/local/lib/american.hash")
+;	  )
+;(setq ispell-command "c:/cygwin/usr/local/bin/ispell.exe"
+;      ispell-look-dictionary "d:/util/ispell4/ispell.words"
+;      ispell-look-command "d:/util/ispell4/exe/look.exe"
+;      ispell-command-options (list "-d" "d:/util/ispell4/ispell.dict")
+;      )
+
+; Source Safe
+;(require 'source-safe)
+;(setq ss-project-dirs '(\"^D:\\\\\\\\Spiral\\\\\\\" . \"$/Spiral/\"))
+
+; Set up for Visual C++ compiling
+; (setq compile-command '("nmake -f blah.mak CFG=\"blah - Win32 Debug\"" . 10))
+
+; stuff to make bash work
+;(setq win32-quote-process-args t)
+;(setq shell-command-switch "-c")
+
+;(progn
+;  (using-unix-filesystems t)
+;  (setq shell-file-name "bash")
+;  (setq explicit-shell-file-name shell-file-name)
+;  (setq explicit-sh-args '("-login" "-i"))
+;  (setq shell-command-switch "-c")
+;  (setq archive-zip-use-pkzip nil)
+;  (setenv "SHELL" shell-file-name)
+;  (setq win32-quote-process-args t)
+;  (setq win32-enable-italics t)
+;  (setq comint-process-echoes nil)
+;  (menu-bar-mode 0))
+
+; colors
+; background color
+; (set-background-color "cornsilk")
+
+; font lock stuff
+;;; (old stuff first)
+;(cond ((fboundp 'global-font-lock-mode)
+;       ;; Turn on font-lock in all modes that support it
+;       (global-font-lock-mode t)
+;       ;; Maximum colors
+;       (setq font-lock-maximum-decoration t)
+;       ;; Customize face attributes
+;       (setq font-lock-face-attributes
+;             ;; Symbol-for-Face Foreground Background Bold Italic Underline
+;             '((font-lock-comment-face       "DarkGreen")
+;       	(font-lock-string-face        "Sienna")
+;       	(font-lock-keyword-face       "RoyalBlue")
+;       	(font-lock-function-name-face "Blue")
+;       	(font-lock-variable-name-face "Black")
+;       	(font-lock-type-face          "Black")
+;       	(font-lock-reference-face     "Purple")))
+;       ;; Create the faces from the attributes
+;       (font-lock-make-faces)))
+;;; (my stuff)
+;(cond ((fboundp 'global-font-lock-mode)
+;	;; Turn on font-lock in all modes that support it
+;	(global-font-lock-mode t)
+;	;; Maximum colors
+;	(setq font-lock-maximum-decoration t)
+;	;; Customize face attributes
+;	(setq font-lock-face-attributes
+;	      ;; Symbol-for-Face Foreground Background Bold Italic Underline
+;	      '((font-lock-comment-face       "MidnightBlue")
+;	 (font-lock-string-face        "Black")
+;	 (font-lock-keyword-face       "Black")
+;	 (font-lock-function-name-face "Black")
+;	 (font-lock-variable-name-face "Black")
+;	 (font-lock-type-face          "Black")
+;	 (font-lock-reference-face     "Black")))
+;	;; Create the faces from the attributes
+;	(font-lock-make-faces)))
+
+; sentence ending stuff
+(setq sentence-end "[.?!][]\"')]*\\($\\|\t\\| \\)[ \t\n]*")
+(setq sentence-end-double-space nil)
+
+; add my lisp dirs to the load path
+;(setq load-path
+;      (append load-path (list "d:/emacs/site-lisp/" "d:/emacs/site-lisp/w3/lisp" "d:/emacs/site-lisp/w3/widget" "d:/emacs/site-lisp/cc-mode-4.282/"))
+;)
+
+; w3 mode stuff
+; (setq load-path (cons "d:/emacs/site-lisp/w3/lisp" load-path))
+; (autoload 'w3 "w3/w3" "WWW Browser" t)
+; (require 'w3-auto)
+; (setq w3-default-homepage "file:d:\\josh\\home_plain.html")
+
+; stuff for cc-mode
+
+;(fmakunbound 'c-mode)
+;(makunbound  'c-mode-map)
+;(fmakunbound 'c++-mode)
+;(makunbound  'c++-mode-map)
+;(makunbound  'c-style-alist)
+
+; 20, WIN32
+; (load-file "/emacs/site-lisp/cc-mode-4.282/cc-mode.el")
+(require 'cc-mode)
+
+(autoload 'c++-mode  "cc-mode" "C++ Editing Mode" t)
+(autoload 'c-mode    "cc-mode" "C Editing Mode" t)
+
+(setq auto-mode-alist
+       (append
+         '(("\\.C$"  . c++-mode)
+           ("\\.H$"  . c++-mode)
+           ("\\.cc$" . c++-mode)
+           ("\\.cpp$" . c++-mode)
+           ("\\.hh$" . c++-mode)
+           ("\\.c$"  . c-mode)
+           ("\\.h$"  . c++-mode)
+          ) auto-mode-alist))
+
+(define-key global-map "\C-x\C-b" 'josh-buffer-menu)
+(define-key global-map "\e#" 'replace-string)
+(define-key global-map "\C-xz" 'repeat-complex-command)
+(define-key global-map "\C-xc" 'compile)
+;(define-key global-map "\C-x\C-c" 'compile)	; overrides emacs quit
+(define-key global-map "\C-x`" 'next-error)
+(define-key global-map "\C-x~" 'goto-line)
+(define-key global-map [delete] 'delete-char)
+(define-key global-map "\M-[" 'backward-paragraph)
+(define-key global-map "\M-]" 'forward-paragraph)
+
+; load in my gnus stuff
+; (load-file "_gnus")
+
+; load macroz
+; (load-file "~/.macros")
+
+; load in my mail stuff
+; (load-file "~/.vm")
+
+; xxx should re-enable soon
+; (setq-default abbrev-mode t)
+; (read-abbrev-file "~/.abbrevs")
+; (setq save-abbrevs t)
+
+;; don't truncate the end of lines with multiple vert windows
+(setq truncate-partial-width-windows nil)
+
+(setq default-major-mode 'text-mode)
+;(setq text-mode-hook 'turn-on-auto-fill)
+;(add-hook 'text-mode-hook
+;      (function (lambda ()
+;                 "jet's additions to text-mode"
+;                  (setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+;                  (setq tab-width 4)
+;                  (turn-on-auto-fill)
+;                  )))
+
+(setq text-mode-hook '(lambda ()
+			(setq tab-width 4)
+			(setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+			(turn-on-auto-fill)
+))
+
+(setq perl-mode-hook '(lambda ()
+			(setq tab-width 4)
+			(setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+))
+
+(setq mail-mode-hook '(lambda ()
+			(setq tab-width 4)
+			(setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+			(turn-on-auto-fill)
+))
+
+(setq html-mode-hook '(lambda ()
+			(setq tab-width 4)
+			(setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+			(turn-on-auto-fill)
+))
+
+(setq tab-width 4)
+(setq tab-stop-list (list 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132) )
+;(auto-fill-mode t)
+
+(nconc c-style-alist
+  '(("josh"
+     (c-basic-offset . 4)
+     (c-tab-always-indent . nil)
+     (c-hanging-comment-ender-p . nil)
+     (c-offsets-alist . (
+			 (case-label . +2)
+			 (access-label . -2)
+			 (label . 0)
+			 (defun-block-intro . +)
+			 (statement-block-intro . +)
+			 (statement-case-intro . +2)
+			 (statement-case-open . +2)
+			 (substatement-open . 0)
+			 (inline-open . 0)
+			 (block-open . -)
+			 (brace-list-intro . 0)
+			 (brace-list-entry . +)
+			 ))
+     )))
+
+(nconc c-style-alist
+  '(("spectra"
+     (c-basic-offset . 3)
+     (c-tab-always-indent . nil)
+     (c-hanging-comment-ender-p . nil)
+     (c-offsets-alist . (
+			 (case-label . +2)
+			 (access-label . -2)
+			 (label . 0)
+			 (defun-block-intro . +)
+			 (statement-block-intro . +)
+			 (statement-case-intro . +2)
+			 (statement-case-open . +2)
+			 (substatement-open . 0)
+			 (brace-list-intro . +)
+			 (brace-list-entry . +)
+			 (block-open . -)
+			 (brace-list-intro . 0)
+			 ))
+     )))
+
+;(modify-syntax-entry ?/  ". 1456"  c-mode-syntax-table)
+;(modify-syntax-entry ?*  ". 23"    c-mode-syntax-table)
+;(modify-syntax-entry ?\n "> b"     c-mode-syntax-table)
+;(modify-syntax-entry ?\^m "> b"    c-mode-syntax-table)
+
+(defun c-semi&comma-no-newlines-before-nonblanks ()
+  (save-excursion
+    (if (and (eq last-command-char ?\;)
+             (zerop (forward-line 1))
+             (not (looking-at "^[ \t]*$")))
+        'stop
+      nil)))
+
+; customize auto newline mode
+(setq c-hanging-semi&comma-criteria
+      (list 'c-semi&comma-no-newlines-before-nonblanks
+			'c-semi&comma-inside-parenlist
+			'c-semi&comma-no-newlines-for-oneline-inliners))
+
+(defun flip-c-style-hook ()
+  (c-set-style "josh")
+  (setq c-auto-newline nil)
+  (turn-on-auto-fill)
+  (setq tab-width 4)
+  (setq indent-tabs-mode nil)      ; only use spaces
+  (setq c-tab-always-indent nil)
+  (setq comment-multi-line t)
+  (setq c-comment-continuation-stars "* ")
+  (define-key c-mode-base-map "\C-m" 'c-context-line-break)
+)
+(add-hook 'c-mode-common-hook 'flip-c-style-hook)
+
+; unused right now. swiped from:
+; http://www.dotemacs.de/dotfiles/JackRepenning.emacs.html
+(c-add-style "java-pure-block-aligned"
+             (list '(c-basic-offset . 4)
+                   '(c-comment-only-line-offset 0 . 0)
+                   '(c-hanging-comment-starter-p . t)
+                   (list 'c-offsets-alist
+                         '(access-label . 0)
+                         '(arglist-close . c-lineup-arglist)
+                         '(arglist-intro . c-lineup-arglist-intro-after-paren)
+                         '(block-close . 0)
+                         '(class-open . +)
+                         '(class-close . +)
+                         '(defun-block-intro . 0)
+                         '(func-decl-cont . c-lineup-java-throws)
+                         '(inher-cont . c-lineup-java-inher)
+                         '(inline-open . +)
+                         '(knr-argdecl-intro . 5)
+                         '(label . 0)
+                         '(statement-block-intro . 0)
+                         '(statement-case-open . +)
+                         '(statement-cont . +)
+                         '(substatement-open . +)
+                         '(topmost-intro . -)
+                         '(topmost-intro-cont . +)
+                         )))
+
+(c-add-style "java-josh"
+             (list '(c-basic-offset . 4)
+                   '(c-comment-only-line-offset 0 . 0)
+                   '(c-hanging-comment-starter-p . t)
+                   (list 'c-offsets-alist
+                         '(access-label . 0)
+                         '(arglist-close . c-lineup-arglist)
+                         '(arglist-intro . c-lineup-arglist-intro-after-paren)
+                         '(block-close . 0)
+                         '(class-open . 0)
+                         '(class-close . 0)
+                         '(defun-block-intro . +)
+                         '(func-decl-cont . c-lineup-java-throws)
+                         '(inher-cont . c-lineup-java-inher)
+                         '(inline-open . 0)
+                         '(knr-argdecl-intro . 5)
+                         '(label . 0)
+                         '(statement-block-intro . +)
+                         '(statement-case-open . +)
+                         '(statement-cont . +)
+                         '(substatement-open . 0)
+                         '(topmost-intro . 0)
+                         '(topmost-intro-cont . +)
+                         )))
+
+(defun flip-java-style-hook ()
+  (c-set-style "java-josh")
+  (setq c-auto-newline t)
+  (turn-on-auto-fill)
+  (setq tab-width 4)
+  (setq c-tab-always-indent nil)
+  (setq comment-multi-line t)
+  (setq c-comment-continuation-stars "* ")
+)
+(add-hook 'java-mode-hook 'flip-java-style-hook)
+
+(defun josh-asm-mode-hook ()
+  ;; mess with assembler mode settings
+  (setq tab-width 4)
+)
+(add-hook 'asm-mode-hook 'josh-asm-mode-hook)
+
+; perl stuff
+; (load-file "/emacs/lisp/perl-mode.elc")
+; (define-key perl-mode-map [return] 'newline-and-indent)
+; (setq perl-tab-always-indent nil)
+
+; huh?
+;(put 'eval-expression 'disabled nil)
+
+;;; Emacs-w3 configuration options
+;(autoload 'w3-preview-this-buffer "w3" "WWW Previewer" t)
+;(autoload 'w3-follow-url-at-point "w3" "Find document at pt" t)
+;(autoload 'w3 "w3" "WWW Browser" t)
+;(autoload 'w3-open-local "w3" "Open local file for WWW browsing" t)
+;(autoload 'w3-fetch "w3" "Open remote file for WWW browsing" t)
+;(autoload 'w3-use-hotlist "w3" "Use shortcuts to view WWW docs" t)
+;(autoload 'w3-show-hotlist "w3" "Use shortcuts to view WWW docs" t)
+;(autoload 'w3-follow-link "w3" "Follow a hypertext link." t)
+;(autoload 'w3-batch-fetch "w3" "Batch retrieval of URLs" t)
+;(autoload 'url-get-url-at-point "url" "Find the url under the cursor" nil)
+;(autoload 'url-file-attributes  "url" "File attributes of a URL" nil)
+;(autoload 'url-popup-info "url" "Get info on a URL" t)
+;(autoload 'url-retrieve   "url" "Retrieve a URL" nil)
+;(autoload 'url-buffer-visiting "url" "Find buffer visiting a URL." nil)
+;(autoload 'gopher-dispatch-object "gopher" "Fetch gopher dir" t)
+;(setq w3-default-homepage "http://wwwi/Bowser/rosemary/")
+;;; End of Emacs-w3 configuration options
+(custom-set-variables
+ '(font-lock-maximum-decoration nil)
+ '(widget-use-overlay-change t)
+ '(w3-user-colors-take-precedence t))
+(custom-set-faces)
+
+;; cribbed from http://www.tardis.ed.ac.uk/~skx/win/.emacs
+;;;;;;;;;;;;;
+;;
+;;  Make sure that backups only happen in the directory ~/Backup
+;; This is a dead handy piece of code.
+;;
+;;
+;; (fset 'orthodox-make-backup-file-name
+;;       (symbol-function 'make-backup-file-name))
+;;
+;; (defun make-bak (file)
+;;   "Intended for (fset 'make-backup-file-name 'make-bak)."
+;;   (let* ((file-dir (abbreviate-file-name (or (file-name-directory file)
+;;                               default-directory)))
+;;       ;; Using default-directory is necessary there because
+;;       ;; 'file-name-directory returns nil on a relative path. I assume
+;;       ;; this is why orthodox (find-backup-file-name "gug") fails.
+;;       (backup-dir (concat (getenv "HOME") "/Backup/")))
+;;     (or (file-directory-p backup-dir)
+;;      (make-directory backup-dir)
+;;      ;; Creating parents shouldn't be necessary, so it's better not to
+;;      ;; enable it; if 'make-directory barfs then something's wrong.
+;;      )
+;;     (concat backup-dir (file-name-nondirectory file))))
+;;
+;; (defun bak-p (file)
+;;   "Intended for (fset 'backup-file-name-p 'bak-p)."
+;;   ;; Dired.el[2040] v19.34.1 doesn't call backup-file-name-p
+;;   ;; unless the final char of the file name looks like it
+;;   ;; might be appropriate for that; this is claimed needed
+;;   ;; for efficiency. Therefore, some dired functions won't
+;;   ;; work right with the new format. Egrep reveals no
+;;   ;; other grief, & I've never used those dired functions.
+;;   (string-match "Bak[/\\]" file))
+;;
+;; (fset 'make-backup-file-name 'make-bak)
+;; (fset 'backup-file-name-p 'bak-p) 
+
+;; from http://bc.tech.coop/blog/080128.html
+(defconst use-backup-dir t)   
+(setq backup-directory-alist (quote ((".*" . "~/Backup/")))
+      version-control t                ; Use version numbers for backups
+      kept-new-versions 2              ; Number of newest versions to keep
+      kept-old-versions 2              ; Number of oldest versions to keep
+      delete-old-versions t            ; Delete excess backup versions
+      history-delete-duplicates t      ; Delete dups in history
+      history-length 100               ; Larger history size than default 30
+      inhibit-splash-screen t          ; No initial splash screen
+      dired-listing-switches "-l"      ; Don't display dot files
+      dired-recursive-deletes 'top     ; Recursive deletes
+      dired-recursive-copies 'top      ; Recursive copies
+      backup-by-copying-when-linked t) ; Copy linked files, don't rename
