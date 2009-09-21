@@ -33,37 +33,6 @@
   (compile "make")
 )
 
-; doesn't actually work yet
-(defun fixup-buffer-spectra-style (arg)
-  "yo"
-  (interactive "P")
-  (while (search-forward "" nil t)
-    (replace-match "" nil t))
-  (set-buffer-file-coding-system "dos")
-)
-
-;;; telnet stuff
-(require 'telnet)
-(setq telnet-program "d:\\util\\telnet.exe")
-(defun telnet (host)
-  "Open a network login connection to host named HOST (a string).
-Communication with HOST is recorded in a buffer `*telnet-HOST*'.
-Normally input is edited in Emacs and sent a line at a time."
-  (interactive "sOpen telnet connection to host: ")
-  (let* ((comint-delimiter-argument-list '(?\  ?\t))
-         (name (concat "telnet-" (comint-arguments host 0 nil) ))
-	 (buffer (get-buffer (concat "*" name "*")))	 process)
-    (cond ((string-equal system-type "windows-nt")
-      (setq telnet-new-line "\n")))
-    (if (and buffer (get-buffer-process buffer))
-	(pop-to-buffer (concat "*" name "*"))
-      (pop-to-buffer (make-comint name telnet-program nil host))
-      (setq process (get-buffer-process (current-buffer)))
-      (set-process-filter process 'telnet-initial-filter)
-      (accept-process-output process)      (telnet-mode)
-      (setq comint-input-sender 'telnet-simple-send)
-      (setq telnet-count telnet-initial-count))))
-
 (defun josh-insert-change-comment (arg)
   "insert my standard time/date stamp for making changes to stuff"
   (interactive "P")
@@ -88,8 +57,8 @@ Normally input is edited in Emacs and sent a line at a time."
 ;      (electric-c-terminator arg)
 ;    (self-insert-command (prefix-numeric-value arg))))
 ; deactivate -- use c-hanging-semi&comma-criteria instead
-;(define-key c-mode-map ";" 'electric-c-semi)
-;(define-key c++-mode-map ";" 'electric-c-semi)
+; (define-key c-mode-map ";" 'electric-c-semi)
+; (define-key c++-mode-map ";" 'electric-c-semi)
 
 ; make '{' do the right thing for me
 (defun josh-electric-c-leftbrace (arg)
@@ -107,9 +76,8 @@ the blank line between the braces."
   (end-of-line nil)
   (newline-and-indent)
 )
-; 20
-(define-key c-mode-map "{" 'josh-electric-c-leftbrace)
-(define-key c++-mode-map "{" 'josh-electric-c-leftbrace)
+; (define-key c-mode-map "{" 'josh-electric-c-leftbrace)
+; (define-key c++-mode-map "{" 'josh-electric-c-leftbrace)
 
 ;; josh's special commenting style, stolen from Pierre Omidyar
 ;; (the commenting style is stolen, that is, not the code;
@@ -150,11 +118,9 @@ the blank line between the braces."
     (c-indent-line)
     (if (not (looking-at "[ \t]*\n"))
 	(newline-and-indent))))
-
-; 20
-(define-key c-mode-map "\e;" 'josh-comment)
-(define-key c++-mode-map "\e;" 'josh-comment)
-(define-key java-mode-map "\e;" 'josh-comment)
+; (define-key c-mode-map "\e;" 'josh-comment)
+; (define-key c++-mode-map "\e;" 'josh-comment)
+; (define-key java-mode-map "\e;" 'josh-comment)
 
 ;; josh's custom comment-aware fill command for c-mode
 ;; note: only works with above comment style!
@@ -186,9 +152,8 @@ the blank line between the braces."
       (re-search-forward "[ \t]*\\*/")
       (forward-line -1)
       (kill-line nil))))
-; 20
-(define-key c-mode-map "\M-q" 'josh-fill-comment)
-(define-key c++-mode-map "\M-q" 'josh-fill-comment)
+; (define-key c-mode-map "\M-q" 'josh-fill-comment)
+; (define-key c++-mode-map "\M-q" 'josh-fill-comment)
 
 ;; Switches between source/header files
 ;; swiped from http://www.dotemacs.de/dotfiles/JanBorsodi/JanBorsodi.emacs.html
