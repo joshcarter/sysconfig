@@ -1,7 +1,11 @@
+if [ -f "$HOME/.p4config" ]; then
+  export P4CONFIG="$HOME/.p4config"
+fi
+
 alias l="ls -lh"
 alias la="ls -lah"
 
-PS1="\j ∴ "
+PS1="\h:\W ∴ "
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
 
