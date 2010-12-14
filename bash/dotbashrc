@@ -1,6 +1,9 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
+export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin
+export EDITOR=emacs
+
 # Don't put duplicate lines in the history
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=1000
