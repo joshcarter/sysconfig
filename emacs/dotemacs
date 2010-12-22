@@ -46,7 +46,7 @@
 
 ;; clojure mode
 ;;
-(load-file (concat emacs-dir "/josh-clojure.el"))
+; (load-file (concat emacs-dir "/josh-clojure.el"))
 
 ;; cc mode
 ;;

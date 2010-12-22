@@ -1,11 +1,14 @@
-if [ -f "$HOME/.p4config" ]; then
-  export P4CONFIG="$HOME/.p4config"
-fi
+export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin
+export EDITOR=emacs
 
 alias l="ls -lh"
 alias la="ls -lah"
 
 PS1="\h:\W ∴ "
+
+if [ -f "$HOME/.p4config" ]; then
+  export P4CONFIG="$HOME/.p4config"
+fi
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
 
