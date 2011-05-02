@@ -3,6 +3,7 @@
 
 export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin
 export EDITOR=vi
+export JAVA_HOME=/Library/Java/Home
 
 # Don't put duplicate lines in the history
 HISTCONTROL=ignoredups:ignorespace
