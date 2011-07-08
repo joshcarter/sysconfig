@@ -1,8 +1,8 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin
-export EDITOR=vi
+export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin:/usr/local/scala/bin
+export EDITOR=emacs
 export JAVA_HOME=/Library/Java/Home
 
 # Don't put duplicate lines in the history
