@@ -1,7 +1,7 @@
 ;;    Directories
 ;;
 (defvar home-dir (concat (expand-file-name "~") "/"))
-(defvar emacs-dir (concat home-dir "/Library/SysConfig/emacs"))
+(defvar emacs-dir (concat home-dir "/sysconfig/emacs"))
 
 (push emacs-dir load-path)
 (load-file (concat emacs-dir "/josh-addons.el"))
@@ -46,7 +46,7 @@
 
 ;; clojure mode
 ;;
-(load-file (concat emacs-dir "/josh-clojure.el"))
+; (load-file (concat emacs-dir "/josh-clojure.el"))
 
 ;; cc mode
 ;;
