@@ -2,10 +2,15 @@ if [ -f "$HOME/.p4config" ]; then
   export P4CONFIG="$HOME/.p4config"
 fi
 
+export EDITOR=emacs
+
 alias l="ls -lh"
 alias la="ls -lah"
 
 PS1="\h:\W ∴ "
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
+
+export JAVA_HOME=/Library/Java/Home
+export PATH=$PATH:/Users/Josh/bin:/Developer/usr/bin:/usr/local/scala/bin
 
