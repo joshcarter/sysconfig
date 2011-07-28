@@ -1,8 +1,20 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-export PATH=$PATH:/sbin:/usr/local/sbin:/usr/local/sbin:/usr/local/bin:/usr/local/scala/bin
-export EDITOR=emacs
+export PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin
+
+if [ -d "/Users/Josh/bin" ]; then
+   export PATH=$PATH:/Users/Josh/bin
+fi
+
+if [ -d "/usr/local/scala/bin" ]; then
+   export PATH=$PATH:/usr/local/scala/bin
+fi
+
+if [ -d "/Developer/usr/bin" ]; then
+   export PATH=$PATH:/Developer/usr/bin
+fi
+
 export JAVA_HOME=/Library/Java/Home
 
 # Don't put duplicate lines in the history
@@ -30,7 +42,3 @@ alias la="ls -lah"
 PS1="\h:\W ∴ "
 
 [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm
-
-export JAVA_HOME=/Library/Java/Home
-export PATH=$PATH:/Users/Josh/bin:/Developer/usr/bin:/usr/local/scala/bin
-
