@@ -1,10 +1,23 @@
 ;;    Directories
 ;;
 (defvar home-dir (concat (expand-file-name "~") "/"))
-(defvar emacs-dir (concat home-dir "/sysconfig/emacs"))
+
+; Linux systems
+(if (file-exists-p (concat home-dir "/sysconfig/emacs"))
+    (defvar emacs-dir (concat home-dir "/sysconfig/emacs")))
+
+; Mac
+(if (file-exists-p (concat home-dir "/Library/SysConfig/emacs"))
+    (defvar emacs-dir (concat home-dir "/Library/SysConfig/emacs")))
 
 (push emacs-dir load-path)
 (load-file (concat emacs-dir "/josh-addons.el"))
+
+; color theme
+(push (concat emacs-dir "/color-theme") load-path)
+(require 'color-theme)
+(color-theme-initialize)
+(color-theme-blackboard)
 
 (require 'cl)
 (menu-bar-mode nil)
