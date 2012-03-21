@@ -33,6 +33,52 @@
   (compile "make")
 )
 
+(defun home ()
+  "Home - begin of line, once more - screen, once more - buffer."
+  (interactive nil)
+  (cond
+   ((and (eq last-command 'home) (eq last-last-command 'home))
+    (goto-char (point-min))
+    )
+   ((eq last-command 'home)
+    (move-to-window-line 0)
+    )
+   (t
+    (beginning-of-line)
+    )
+   )
+  (setq last-last-command last-command)
+)
+(global-set-key "\C-a" 'home)
+ 
+(defun end ()
+  "End - end of line, once more - screen, once more - buffer."
+  (interactive nil)
+  (cond
+   ((and (eq last-command 'end) (eq last-last-command 'end))
+    (goto-char (point-max))
+    )
+   ((eq last-command 'end)
+    (move-to-window-line -1)
+    (end-of-line)
+    )
+   (t
+    (end-of-line)
+    )
+   )
+  (setq last-last-command last-command)
+)
+(global-set-key "\C-e" 'end)
+ 
+(defun beginning-of-window ()
+  (interactive)
+  (move-to-window-line 0))
+ 
+(defun end-of-window ()
+  (interactive)
+  (move-to-window-line -1)
+  (end-of-line))
+ 
 (defun josh-insert-change-comment (arg)
   "insert my standard time/date stamp for making changes to stuff"
   (interactive "P")
