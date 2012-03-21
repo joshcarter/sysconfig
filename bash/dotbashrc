@@ -15,6 +15,10 @@ if [ -d "/Developer/usr/bin" ]; then
    export PATH=$PATH:/Developer/usr/bin
 fi
 
+if [ -d "/Users/Josh/Library/Application Support/TextMate/PlugIns/AckMate.tmplugin/Contents/Resources" ]; then
+    alias ack="/Users/Josh/Library/Application\ Support/TextMate/PlugIns/AckMate.tmplugin/Contents/Resources/ackmate_ack"
+fi
+
 export JAVA_HOME=/Library/Java/Home
 
 # Don't put duplicate lines in the history
