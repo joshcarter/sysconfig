@@ -19,11 +19,27 @@
 (color-theme-initialize)
 (color-theme-blackboard)
 
+; cc mode (more style stuff further down)
+(push (concat emacs-dir "/cc-mode") load-path)
+(require 'cc-mode)
+(autoload 'c++-mode  "cc-mode" "C++ Editing Mode" t)
+(autoload 'c-mode    "cc-mode" "C Editing Mode" t)
+
+(setq auto-mode-alist
+       (append
+         '(("\\.C$"  . c++-mode)
+           ("\\.H$"  . c++-mode)
+           ("\\.cc$" . c++-mode)
+           ("\\.cpp$" . c++-mode)
+           ("\\.hh$" . c++-mode)
+           ("\\.c$"  . c-mode)
+           ("\\.h$"  . c++-mode)
+          ) auto-mode-alist))
+
 (require 'cl)
 (menu-bar-mode nil)
 (line-number-mode 1)
 (setq column-number-mode t)
-
 
 ;; global key mappings
 ;; 
@@ -38,11 +54,6 @@
 (define-key global-map [delete] 'delete-char)
 (define-key global-map "\M-[" 'backward-paragraph)
 (define-key global-map "\M-]" 'forward-paragraph)
-
-;; gnuserv stuff
-; (autoload 'gnuserv-start "gnuserv-compat" "Allow this Emacs process to be a server for client processes." t)
-; (gnuserv-start)
-; (setq gnuserv-frame (selected-frame))
 
 ; swiped from http://www.dotemacs.de/dotfiles/JayakrishnanNair.emacs.html
 (global-set-key "`" 'match-paren)
@@ -60,23 +71,6 @@
 ;; clojure mode
 ;;
 ; (load-file (concat emacs-dir "/josh-clojure.el"))
-
-;; cc mode
-;;
-(require 'cc-mode)
-(autoload 'c++-mode  "cc-mode" "C++ Editing Mode" t)
-(autoload 'c-mode    "cc-mode" "C Editing Mode" t)
-
-(setq auto-mode-alist
-       (append
-         '(("\\.C$"  . c++-mode)
-           ("\\.H$"  . c++-mode)
-           ("\\.cc$" . c++-mode)
-           ("\\.cpp$" . c++-mode)
-           ("\\.hh$" . c++-mode)
-           ("\\.c$"  . c-mode)
-           ("\\.h$"  . c++-mode)
-          ) auto-mode-alist))
 
 ;; don't truncate the end of lines with multiple vert windows
 (setq truncate-partial-width-windows nil)
