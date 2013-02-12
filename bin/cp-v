@@ -1,0 +1,156 @@
+#!/usr/bin/env ruby
+
+# Simple tool to copy and checksum a tree of files. Currently not very
+# efficient; it does each operation as separate steps. Future versions
+# may:
+#
+# - Bring read/checksum into the program so we're not double-reading.
+# - Allow destination to be a remote machine, accessed over scp.
+# - Figure out if there's a way to purge destination files from cache
+#   after they've been copied, so checksum(dest) hits disk for sure.
+
+require 'fileutils'
+require 'set'
+require 'pp'
+
+#
+# Whole bunch of crap on verifying user input...
+#
+source = nil
+dest = nil
+errors = []
+cp = `which cp`.strip
+find = `which find`.strip
+sum = `which cksum`.strip
+
+if sum.empty?
+  sum = `which sum`.strip
+end
+
+if sum.empty?
+  puts "No checksum program."
+  exit -1
+end
+
+if ARGV.length != 2
+  puts "Usage: #{$0} source-dir dest-dir"
+  puts "- Copies and verifies source directory recursively to destination."
+  puts "  The new dir will be created *under* the destination dir."
+  exit -1
+else
+  source = ARGV[0]
+  dest = ARGV[1]
+end
+
+unless File.directory?(source)
+  puts "Source #{source} is not a directory."
+  exit -1
+end
+
+unless File.directory?(dest)
+  puts "Destination #{dest} is not a directory."
+  exit -1
+end
+
+dest = File.join File.expand_path(dest), File.basename(source)
+source = File.expand_path(source)
+
+if File.exists?(dest)
+  # TODO: allow dest to exist if it's a directory and it has no entries.
+
+  puts "Destination #{dest} already exists."
+  exit -1
+end
+
+if source.length > 45 or dest.length > 45
+  puts "Copying #{source}"
+  puts "     to #{dest}..."
+else
+  puts "Copying #{source} to #{dest}..."
+end
+
+#
+# Finally, copy files.
+#
+`cp -pvr #{source} #{dest}` #.each_line do |line|
+  # print "   #{line}"
+# end
+
+#
+# Checksum source files. NOTE: I'm intentionally doing the source checksum
+# after the copy, *then* dest checksum with the hope that OS cache for the
+# destination files are out of cache by the time we come back to checksum
+# them.
+#
+files = []
+`#{find} #{source} -type f`.each_line { |l| files << l.strip }
+
+if files.empty?
+  puts "No files under #{source}"
+  exit -1
+end
+
+# Output format for shasum will be [hexstuff] [path], format for cksum
+# will be [stuff] [stuff] [path]. We want to strip off the path stuff,
+# since that'll be different at the destination.
+matcher = if sum.end_with?('shasum')
+            /^(\w+)\s+/
+          elsif (sum.end_with?('cksum') || sum.end_with?('sum'))
+            /^(\d+\s\d+)\s+/
+          end
+
+puts " - Checksumming source files"
+
+checksums = files.map do |file|
+  begin
+    s = `#{sum} "#{file}"`.strip
+    s = s.match(matcher)[1]
+  rescue
+    puts "failed checksumming file #{file}: #{s}"
+    exit -1
+  end
+
+  [file, s]
+end
+
+#
+# Checksum destination files and verify against sources.
+#
+puts " - Verifying destination files"
+
+checksums = checksums.map do |sfile, ssum|
+  # Remove source dir from file path
+  dfile = sfile[(source.length + 1)..-1]
+  dfile = File.join(dest, dfile)
+
+  if File.exists?(dfile)
+    dsum = `#{sum} "#{dfile}"`.strip
+  else
+    errors << "destination file '#{dfile}' does not exist"
+  end
+
+  dsum = dsum.match(matcher)[1]
+
+  if ssum != dsum
+    errors << "checksum on file '#{dfile}' does not match source\n" +
+      "  source: #{ssum}\n" +
+      "    dest: #{dsum}"
+  end
+
+  [sfile, ssum, dfile, dsum]
+end
+
+unless errors.empty?
+  puts
+  puts "COPY FAILED"
+  puts
+
+  errors.each do |error|
+    puts "Error: #{error}"
+  end
+
+  exit -1
+else
+  puts "Copy verified."
+  exit 0
+end
