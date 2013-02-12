@@ -39,6 +39,7 @@ if [ -f "$HOME/.p4config" ]; then
 fi
 
 export EDITOR=emacs
+export JRUBY_OPTS=--1.9
 
 alias l="ls -lh"
 alias la="ls -lah"
