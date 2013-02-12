@@ -43,12 +43,12 @@ else
 end
 
 unless File.directory?(source)
-  puts "Source #{source} is not a directory."
+  puts "Source '#{source}' is not a directory."
   exit -1
 end
 
 unless File.directory?(dest)
-  puts "Destination #{dest} is not a directory."
+  puts "Destination '#{dest}' is not a directory."
   exit -1
 end
 
@@ -58,21 +58,21 @@ source = File.expand_path(source)
 if File.exists?(dest)
   # TODO: allow dest to exist if it's a directory and it has no entries.
 
-  puts "Destination #{dest} already exists."
+  puts "Destination '#{dest}' already exists."
   exit -1
 end
 
 if source.length > 45 or dest.length > 45
-  puts "Copying #{source}"
-  puts "     to #{dest}..."
+  puts "Copying '#{source}'"
+  puts "     to '#{dest}'..."
 else
-  puts "Copying #{source} to #{dest}..."
+  puts "Copying '#{source}' to '#{dest}'..."
 end
 
 #
 # Finally, copy files.
 #
-`cp -pvr #{source} #{dest}` #.each_line do |line|
+`cp -pvr "#{source}" "#{dest}"` #.each_line do |line|
   # print "   #{line}"
 # end
 
@@ -83,10 +83,10 @@ end
 # them.
 #
 files = []
-`#{find} #{source} -type f`.each_line { |l| files << l.strip }
+`#{find} "#{source}" -type f`.each_line { |l| files << l.strip }
 
 if files.empty?
-  puts "No files under #{source}"
+  puts "No files under '#{source}'"
   exit -1
 end
 
