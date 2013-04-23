@@ -14,6 +14,11 @@
 (load-file (concat emacs-dir "/josh-addons.el"))
 (load-file (concat emacs-dir "/artist.el"))
 
+; defaults
+(setq-default c-basic-offset 4)
+(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil)
+      
 ; color theme
 (push (concat emacs-dir "/color-theme") load-path)
 (require 'color-theme)
@@ -23,6 +28,19 @@
 ; ruby mode
 (push (concat emacs-dir "/ruby-mode") load-path)
 (require 'ruby-mode)
+
+; go mode
+(push (concat emacs-dir "/go-mode") load-path)
+(require 'go-mode-load)
+
+(eval-after-load "go"
+  '(progn
+     (defun my-go-mode-hook ()
+       (add-hook 'before-save-hook #'gofmt-before-save)
+       (setq tab-width 4)
+       (setq indent-tabs-mode nil))
+     (add-hook 'go-mode-hook 'my-go-mode-hook)))
+
 
 ; TODO: (if (null window-system) ()) ..more here..
 
@@ -62,6 +80,9 @@
 (define-key global-map [delete] 'delete-char)
 (define-key global-map "\M-[" 'backward-paragraph)
 (define-key global-map "\M-]" 'forward-paragraph)
+(add-hook 'lisp-mode-hook '(lambda ()
+      (local-set-key (kbd "RET") 'newline-and-indent)))
+      (define-key global-map (kbd "RET") 'newline-and-indent)
 
 ;------------------------------------------------------------------------------------------
 ; Compilation mode
