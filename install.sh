@@ -9,5 +9,3 @@ ln -s $SCRIPT_DIR/bash/dotbashrc .bashrc
 ln -s $SCRIPT_DIR/bash/dotbash_profile .bash_profile
 ln -s $SCRIPT_DIR/vim/dotvimrc .vimrc
 ln -s $SCRIPT_DIR/vim/dotvim .vim
-
-echo "export PATH=\$PATH:$SCRIPT_DIR/bin" >> .bashrc
