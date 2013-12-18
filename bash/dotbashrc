@@ -21,6 +21,10 @@ if [ -d "/usr/local/scala/bin" ]; then
    export PATH=$PATH:/usr/local/scala/bin
 fi
 
+if [ -d "/usr/local/go/bin" ]; then
+   export PATH=$PATH:/usr/local/go/bin
+fi
+
 if [ -d "/Developer/usr/bin" ]; then
    export PATH=$PATH:/Developer/usr/bin
 fi
