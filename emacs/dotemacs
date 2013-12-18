@@ -41,6 +41,22 @@
        (setq indent-tabs-mode nil))
      (add-hook 'go-mode-hook 'my-go-mode-hook)))
 
+; ============================== org mode ==============================
+(push (concat emacs-dir "/org-mode/lisp") load-path)
+(require 'org)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sh . t)
+   (org . t)
+   (emacs-lisp . t)
+   (ruby . t)
+   (R . t)
+   (gnuplot . t)))
+
+(setq org-confirm-babel-evaluate nil)
+; ============================= /org mode ==============================
+
 
 ; TODO: (if (null window-system) ()) ..more here..
 
