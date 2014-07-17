@@ -557,7 +557,7 @@ buffer."
     ;; is not an issue because gofmt -w does not produce any stdout
     ;; output in case of success.
 ;;    (if (zerop (call-process "/bin/bash" nil t nil "-c" "gofmt -tabs=false -tabwidth=4 -w=true" tmpfile))
-    (if (zerop (call-process "gofmt" nil errbuf nil "-tabs=false" "-tabwidth=4" "-w=true" tmpfile))
+    (if (zerop (call-process "gofmt" nil errbuf nil "-w=true" tmpfile))
         (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
             (progn
               (kill-buffer errbuf)
