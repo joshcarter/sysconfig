@@ -15,6 +15,12 @@
 (load-file (concat emacs-dir "/artist.el"))
 
 ; defaults
+(menu-bar-mode -1)
+(setq inhibit-splash-screen t)
+(line-number-mode 1)
+(column-number-mode 1)
+(global-hl-line-mode 1)
+
 (setq-default c-basic-offset 4)
 (setq-default tab-width 4)
 (setq-default indent-tabs-mode nil)
@@ -31,7 +37,7 @@
 
 ; go mode
 (push (concat emacs-dir "/go-mode") load-path)
-(require 'go-mode-load)
+(require 'go-mode-autoloads)
 
 (eval-after-load "go"
   '(progn
@@ -40,6 +46,9 @@
        (setq indent-tabs-mode nil))
      (add-hook 'go-mode-hook 'my-go-mode-hook)))
 (add-hook 'before-save-hook #'gofmt-before-save)
+
+; protobuf mode
+(require 'protobuf-mode)
 
 ; markdown mode
 ; (autoload 'markdown-mode "markdown-mode"
