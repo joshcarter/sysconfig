@@ -39,12 +39,17 @@
 (push (concat emacs-dir "/go-mode") load-path)
 (require 'go-mode-autoloads)
 
-(eval-after-load "go"
-  '(progn
-     (defun my-go-mode-hook ()
-       (setq tab-width 4)
-       (setq indent-tabs-mode nil))
-     (add-hook 'go-mode-hook 'my-go-mode-hook)))
+(defun my-go-mode-hook ()
+  (setq tab-width 4)
+  (setq indent-tabs-mode nil)
+  (local-set-key "\C-cia" 'go-import-add)
+  (local-set-key "\C-cid" 'go-remove-unused-imports)
+  (local-set-key "\C-cd" 'godoc-at-point)
+  (local-set-key "\C-cD" 'godoc)
+  (local-set-key "\C-cj" 'godef-jump)
+  (local-set-key "\C-cJ" 'godef-jump-other-window)
+)
+(add-hook 'go-mode-hook 'my-go-mode-hook)
 (add-hook 'before-save-hook #'gofmt-before-save)
 
 ; protobuf mode
