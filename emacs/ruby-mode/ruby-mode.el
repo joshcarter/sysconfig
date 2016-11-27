@@ -46,7 +46,7 @@
 
 ;;; Code:
 
-(defconst ruby-mode-revision "$Revision: 32338 $"
+(defconst ruby-mode-revision "$Revision: 55259 $"
   "Ruby mode revision string.")
 
 (defconst ruby-mode-version
@@ -104,10 +104,10 @@
   (regexp-opt (append ruby-modifier-beg-keywords ruby-block-op-keywords))
   "Regexp to match hanging block modifiers.")
 
-(defconst ruby-block-end-re "\\<end\\>")
+(defconst ruby-block-end-re "\\_<end\\_>")
 
 (defconst ruby-here-doc-beg-re
-  "\\(<\\)<\\(-\\)?\\(\\([a-zA-Z0-9_]+\\)\\|[\"]\\([^\"]+\\)[\"]\\|[']\\([^']+\\)[']\\)")
+  "\\(<\\)<\\([-~]\\)?\\(\\([a-zA-Z0-9_]+\\)\\|[\"]\\([^\"]+\\)[\"]\\|[']\\([^']+\\)[']\\)")
 
 (defconst ruby-here-doc-end-re
   "^\\([ \t]+\\)?\\(.*\\)\\(.\\)$")
@@ -127,14 +127,14 @@
     (concat "<<"
             (let ((match (match-string 1)))
               (if (and match (> (length match) 0))
-                  (concat "\\(?:-\\([\"']?\\)\\|\\([\"']\\)" (match-string 1) "\\)"
+                  (concat "\\(?:[-~]\\([\"']?\\)\\|\\([\"']\\)" (match-string 1) "\\)"
                           contents "\\(\\1\\|\\2\\)")
-                (concat "-?\\([\"']\\|\\)" contents "\\1"))))))
+                (concat "[-~]?\\([\"']\\|\\)" contents "\\1"))))))
 
 (defconst ruby-delimiter
-  (concat "[?$/%(){}#\"'`.:]\\|<<\\|\\[\\|\\]\\|\\<\\("
+  (concat "[?$/%(){}#\"'`.:]\\|<<\\|\\[\\|\\]\\|\\_<\\("
           ruby-block-beg-re
-          "\\)\\>\\|" ruby-block-end-re
+          "\\)\\_>\\|" ruby-block-end-re
           "\\|^=begin\\|" ruby-here-doc-beg-re)
   )
 
@@ -190,6 +190,7 @@
   (modify-syntax-entry ?$ "." ruby-mode-syntax-table)
   (modify-syntax-entry ?? "_" ruby-mode-syntax-table)
   (modify-syntax-entry ?_ "_" ruby-mode-syntax-table)
+  (modify-syntax-entry ?: "_" ruby-mode-syntax-table)
   (modify-syntax-entry ?< "." ruby-mode-syntax-table)
   (modify-syntax-entry ?> "." ruby-mode-syntax-table)
   (modify-syntax-entry ?& "." ruby-mode-syntax-table)
@@ -239,8 +240,16 @@ Also ignores spaces after parenthesis when 'space."
   "Default deep indent style."
   :options '(t nil space) :group 'ruby)
 
-(defcustom ruby-encoding-map '((shift_jis . cp932) (shift-jis . cp932))
-  "Alist to map encoding name from emacs to ruby."
+(defcustom ruby-encoding-map
+  '((us-ascii       . nil)       ;; Do not put coding: us-ascii
+    (utf-8          . nil)       ;; Do not put coding: utf-8
+    (shift-jis      . cp932)     ;; Emacs charset name of Shift_JIS
+    (shift_jis      . cp932)     ;; MIME charset name of Shift_JIS
+    (japanese-cp932 . cp932))    ;; Emacs charset name of CP932
+  "Alist to map encoding name from Emacs to Ruby.
+Associating an encoding name with nil means it needs not be
+explicitly declared in magic comment."
+  :type '(repeat (cons (symbol :tag "From") (symbol :tag "To")))
   :group 'ruby)
 
 (defcustom ruby-use-encoding-map t
@@ -325,39 +334,61 @@ Also ignores spaces after parenthesis when 'space."
   (setq paragraph-ignore-fill-prefix t))
 
 (defun ruby-mode-set-encoding ()
-  (save-excursion
-    (widen)
-    (goto-char (point-min))
-    (when (re-search-forward "[^\0-\177]" nil t)
-      (goto-char (point-min))
-      (let ((coding-system
-             (or coding-system-for-write
-                 buffer-file-coding-system)))
-        (if coding-system
-            (setq coding-system
-                  (or (coding-system-get coding-system 'mime-charset)
-                      (coding-system-change-eol-conversion coding-system nil))))
-        (setq coding-system
-              (if coding-system
-                  (symbol-name
-                   (or (and ruby-use-encoding-map
-                            (cdr (assq coding-system ruby-encoding-map)))
-                       coding-system))
-                "ascii-8bit"))
-        (if (looking-at "^#!") (beginning-of-line 2))
-        (cond ((looking-at "\\s *#.*-\*-\\s *\\(en\\)?coding\\s *:\\s *\\([-a-z0-9_]*\\)\\s *\\(;\\|-\*-\\)")
-               (unless (string= (match-string 2) coding-system)
-                 (goto-char (match-beginning 2))
-                 (delete-region (point) (match-end 2))
-                 (and (looking-at "-\*-")
-                      (let ((n (skip-chars-backward " ")))
-                        (cond ((= n 0) (insert "  ") (backward-char))
-                              ((= n -1) (insert " "))
-                              ((forward-char)))))
-                 (insert coding-system)))
-              ((looking-at "\\s *#.*coding\\s *[:=]"))
-              (t (insert "# -*- coding: " coding-system " -*-\n"))
-              )))))
+  "Insert or update a magic comment header with the proper encoding.
+`ruby-encoding-map' is looked up to convert an encoding name from
+Emacs to Ruby."
+  (let* ((nonascii
+          (save-excursion
+            (widen)
+            (goto-char (point-min))
+            (re-search-forward "[^\0-\177]" nil t)))
+         (coding-system
+          (or coding-system-for-write
+              buffer-file-coding-system))
+         (coding-system
+          (and coding-system
+               (coding-system-change-eol-conversion coding-system nil)))
+         (coding-system
+          (and coding-system
+               (or
+                (coding-system-get coding-system :mime-charset)
+                (let ((coding-type (coding-system-get coding-system :coding-type)))
+                  (cond ((eq coding-type 'undecided)
+                         (if nonascii
+                             (or (and (coding-system-get coding-system :prefer-utf-8)
+                                      'utf-8)
+                                 (coding-system-get default-buffer-file-coding-system :coding-type)
+                                 'ascii-8bit)))
+                        ((memq coding-type '(utf-8 shift-jis))
+                         coding-type)
+                        (t coding-system))))))
+         (coding-system
+          (or coding-system
+              'us-ascii))
+         (coding-system
+          (let ((cons (assq coding-system ruby-encoding-map)))
+            (if cons (cdr cons) coding-system)))
+         (coding-system
+          (and coding-system
+               (symbol-name coding-system))))
+    (if coding-system
+        (save-excursion
+          (widen)
+          (goto-char (point-min))
+          (if (looking-at "^#!") (beginning-of-line 2))
+          (cond ((looking-at "\\s *#.*-\*-\\s *\\(en\\)?coding\\s *:\\s *\\([-a-z0-9_]*\\)\\s *\\(;\\|-\*-\\)")
+                 (unless (string= (match-string 2) coding-system)
+                   (goto-char (match-beginning 2))
+                   (delete-region (point) (match-end 2))
+                   (and (looking-at "-\*-")
+                        (let ((n (skip-chars-backward " ")))
+                          (cond ((= n 0) (insert "  ") (backward-char))
+                                ((= n -1) (insert " "))
+                                ((forward-char)))))
+                   (insert coding-system)))
+                ((looking-at "\\s *#.*coding\\s *[:=]"))
+                (t (when ruby-insert-encoding-magic-comment
+                     (insert "# -*- coding: " coding-system " -*-\n"))))))))
 
 (defun ruby-current-indentation ()
   (save-excursion
@@ -417,7 +448,7 @@ Also ignores spaces after parenthesis when 'space."
        ((progn
           (forward-char -1)
           (and (looking-at "\\?")
-               (or (eq (char-syntax (char-before (point))) ?w)
+               (or (eq (char-syntax (preceding-char)) ?w)
                    (ruby-special-char-p))))
         nil)
        ((and (eq option 'heredoc) (< space 0))
@@ -601,7 +632,7 @@ Also ignores spaces after parenthesis when 'space."
               (setq nest (cons (cons nil pnt) nest))
               (setq depth (1+ depth))))
         (goto-char (match-end 0)))
-       ((looking-at (concat "\\<\\(" ruby-block-beg-re "\\)\\>"))
+       ((looking-at (concat "\\_<\\(" ruby-block-beg-re "\\)\\_>"))
         (and
          (save-match-data
            (or (not (looking-at (concat "do" ruby-keyword-end-re)))
@@ -648,7 +679,7 @@ Also ignores spaces after parenthesis when 'space."
        ((looking-at "<<")
         (cond
          ((and (ruby-expr-beg 'heredoc)
-               (looking-at "<<\\(-\\)?\\(\\([\"'`]\\)\\([^\n]+?\\)\\3\\|\\(?:\\sw\\|\\s_\\)+\\)"))
+               (looking-at "<<\\([-~]\\)?\\(\\([\"'`]\\)\\([^\n]+?\\)\\3\\|\\(?:\\sw\\|\\s_\\)+\\)"))
           (setq re (regexp-quote (or (match-string 4) (match-string 2))))
           (if (match-beginning 1) (setq re (concat "\\s *" re)))
           (let* ((id-end (goto-char (match-end 0)))
@@ -731,6 +762,9 @@ Also ignores spaces after parenthesis when 'space."
               (cond ((and (eq deep t) (eq (car (nth 1 state)) paren))
                      (skip-syntax-backward " ")
                      (setq indent (1- (current-column))))
+		    ((eq deep 'space)
+		     (goto-char (cdr (nth 1 state)))
+		     (setq indent (1+ (current-column))))
                     ((let ((s (ruby-parse-region (point) ruby-indent-point)))
                        (and (nth 2 s) (> (nth 2 s) 0)
                             (or (goto-char (cdr (nth 1 s))) t)))
@@ -864,13 +898,13 @@ Also ignores spaces after parenthesis when 'space."
       (goto-char ruby-indent-point)
       (beginning-of-line)
       (skip-syntax-forward " ")
-      (if (looking-at "\\.[^.]")
+      (if (looking-at "\\.[^.]\\|&\\.")
           (+ indent ruby-indent-level)
         indent))))
 
 (defun ruby-electric-brace (arg)
   (interactive "P")
-  (insert-char last-command-char 1)
+  (insert-char last-command-event 1)
   (ruby-indent-line t)
   (delete-char -1)
   (self-insert-command (prefix-numeric-value arg)))
@@ -890,12 +924,12 @@ Also ignores spaces after parenthesis when 'space."
 With argument, do this that many times.
 Returns t unless search stops due to end of buffer."
   (interactive "p")
-  (and (re-search-backward (concat "^\\(" ruby-block-beg-re "\\)\\b")
+  (and (re-search-backward (concat "^\\(" ruby-block-beg-re "\\)\\_>")
                            nil 'move (or arg 1))
        (progn (beginning-of-line) t)))
 
 (defun ruby-beginning-of-indent ()
-  (and (re-search-backward (concat "^\\(" ruby-indent-beg-re "\\)\\b")
+  (and (re-search-backward (concat "^\\(" ruby-indent-beg-re "\\)\\_>")
                            nil 'move)
        (progn
          (beginning-of-line)
@@ -1164,36 +1198,76 @@ balanced expression is found."
 
 (defun ruby-brace-to-do-end ()
   (when (looking-at "{")
-    (let ((orig (point)) (end (progn (ruby-forward-sexp) (point))))
+    (let ((orig (point)) (end (progn (ruby-forward-sexp) (point)))
+	  oneline (end (make-marker)))
+      (setq oneline (and (eolp) (<= (point-at-bol) orig)))
       (when (eq (char-before) ?\})
 	(delete-char -1)
-	(if (eq (char-syntax (char-before)) ?w)
-	    (insert " "))
+	(cond
+	 (oneline
+	  (insert "\n")
+	  (set-marker end (point)))
+	 ((eq (char-syntax (preceding-char)) ?w)
+	  (insert " ")))
 	(insert "end")
-	(if (eq (char-syntax (char-after)) ?w)
+	(if (eq (char-syntax (following-char)) ?w)
 	    (insert " "))
 	(goto-char orig)
 	(delete-char 1)
-	(if (eq (char-syntax (char-before)) ?w)
+	(if (eq (char-syntax (preceding-char)) ?w)
 	    (insert " "))
 	(insert "do")
 	(when (looking-at "\\sw\\||")
 	  (insert " ")
 	  (backward-char))
+	(when oneline
+	  (setq orig (point))
+	  (when (cond
+		 ((looking-at "\\s *|")
+		  (goto-char (match-end 0))
+		  (and (search-forward "|" (point-at-eol) 'move)
+		       (not (eolp))))
+		 (t))
+	    (while (progn
+		     (insert "\n")
+		     (ruby-forward-sexp)
+		     (looking-at "\\s *;\\s *"))
+	      (delete-char (- (match-end 0) (match-beginning 0))))
+	    (goto-char orig)
+	    (beginning-of-line 2)
+	    (indent-region (point) end))
+	  (goto-char orig))
 	t))))
 
 (defun ruby-do-end-to-brace ()
   (when (and (or (bolp)
-		 (not (memq (char-syntax (char-before)) '(?w ?_))))
+		 (not (memq (char-syntax (preceding-char)) '(?w ?_))))
 	     (looking-at "\\<do\\(\\s \\|$\\)"))
-    (let ((orig (point)) (end (progn (ruby-forward-sexp) (point))))
+    (let ((orig (point)) (end (progn (ruby-forward-sexp) (point)))
+	  first last)
       (backward-char 3)
       (when (looking-at ruby-block-end-re)
 	(delete-char 3)
 	(insert "}")
+	(setq last (and (eolp)
+			(progn (backward-char 1)
+			       (skip-syntax-backward " ")
+			       (bolp))
+			(1- (point-at-eol -1))))
 	(goto-char orig)
 	(delete-char 2)
 	(insert "{")
+	(setq orig (point))
+	(when (and last (<= last (point))
+		   (not (search-forward "#" (setq first (point-at-eol)) t)))
+	  (goto-char (- end 4))
+	  (end-of-line 0)
+	  (if (looking-at "\n\\s *")
+	      (delete-char (- (match-end 0) (match-beginning 0))) t)
+	  (goto-char first)
+	  (if (looking-at "\n\\s *")
+	      (delete-char (- (match-end 0) (match-beginning 0))) t))
+	(goto-char orig)
 	(if (looking-at "\\s +|")
 	    (delete-char (- (match-end 0) (match-beginning 0) 1)))
 	t))))
@@ -1230,7 +1304,7 @@ balanced expression is found."
           ;; ?' ?" ?` are ascii codes
           ("\\(^\\|[^\\\\]\\)\\(\\\\\\\\\\)*[?$]\\([#\"'`]\\)" 3 (1 . nil))
           ;; regexps
-          ("\\(^\\|[[=(,~?:;<>]\\|\\(^\\|\\s \\)\\(if\\|elsif\\|unless\\|while\\|until\\|when\\|and\\|or\\|&&\\|||\\)\\|g?sub!?\\|scan\\|split!?\\)\\s *\\(/\\)[^/\n\\\\]*\\(\\\\.[^/\n\\\\]*\\)*\\(/\\)"
+          ("\\(^\\|[[{|=(,~?:;<>]\\|\\(^\\|\\s \\)\\(if\\|elsif\\|unless\\|while\\|until\\|when\\|and\\|or\\|&&\\|||\\)\\|g?sub!?\\|scan\\|split!?\\)\\s *\\(/\\)[^/\n\\\\]*\\(\\\\.[^/\n\\\\]*\\)*\\(/\\)"
            (4 (7 . ?/))
            (6 (7 . ?/)))
           ("^\\(=\\)begin\\(\\s \\|$\\)" 1 (7 . nil))
@@ -1373,7 +1447,7 @@ buffer position `limit' or the end of the buffer."
        1 font-lock-function-name-face)
      ;; keywords
      (cons (concat
-            "\\(^\\|[^_:.@$]\\|\\.\\.\\)\\b\\(defined\\?\\|"
+            "\\(^\\|[^_:.@$]\\|\\.\\.\\)\\_<\\(defined\\?\\|"
             (regexp-opt
              '("alias"
                "and"
@@ -1418,7 +1492,7 @@ buffer position `limit' or the end of the buffer."
      ;; here-doc beginnings
      (list ruby-here-doc-beg-re 0 'font-lock-string-face)
      ;; variables
-     '("\\(^\\|[^_:.@$]\\|\\.\\.\\)\\b\\(nil\\|self\\|true\\|false\\)\\>"
+     '("\\(^\\|[^_:.@$]\\|\\.\\.\\)\\_<\\(nil\\|self\\|true\\|false\\)\\>"
        2 font-lock-variable-name-face)
      ;; variables
      '("\\(\\$\\([^a-zA-Z0-9 \n]\\|[0-9]\\)\\)\\W"
@@ -1434,7 +1508,7 @@ buffer position `limit' or the end of the buffer."
      '("\\(^\\|[[ \t\n<+(,=]\\)\\(%[xrqQwW]?\\([^<[{(a-zA-Z0-9 \n]\\)[^\n\\\\]*\\(\\\\.[^\n\\\\]*\\)*\\(\\3\\)\\)"
        (2 font-lock-string-face))
      ;; constants
-     '("\\(^\\|[^_]\\)\\b\\([A-Z]+\\(\\w\\|_\\)*\\)"
+     '("\\(^\\|[^_]\\)\\_<\\([A-Z]+\\(\\w\\|_\\)*\\)"
        2 font-lock-type-face)
      ;; symbols
      '("\\(^\\|[^:]\\)\\(:\\([-+~]@?\\|[/%&|^`]\\|\\*\\*?\\|<\\(<\\|=>?\\)?\\|>[>=]?\\|===?\\|=~\\|![~=]?\\|\\[\\]=?\\|\\(\\w\\|_\\)+\\([!?=]\\|\\b_*\\)\\|#{[^}\n\\\\]*\\(\\\\.[^}\n\\\\]*\\)*}\\)\\)"
