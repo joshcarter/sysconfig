@@ -12,33 +12,36 @@
 
 (push emacs-dir load-path)
 (load-file (concat emacs-dir "/josh-addons.el"))
-(load-file (concat emacs-dir "/artist.el"))
 
 ; defaults
-(menu-bar-mode -1)
+; (menu-bar-mode -1)
 (setq inhibit-splash-screen t)
 (line-number-mode 1)
 (column-number-mode 1)
-(global-hl-line-mode 1)
+; (global-hl-line-mode 1)
 
 (setq-default c-basic-offset 4)
 (setq-default tab-width 4)
 (setq-default indent-tabs-mode nil)
-      
+
+; xterm-color from https://github.com/atomontage/xterm-color
+(push (concat emacs-dir "/xterm-color") load-path)
+(require 'xterm-color)
+
 ; color theme
 (push (concat emacs-dir "/color-theme") load-path)
+(add-to-list 'custom-theme-load-path (concat emacs-dir "/themes"))
 (require 'color-theme)
-; (color-theme-initialize)
-(color-theme-sunburst)
+(color-theme-initialize)
+(load-theme 'hc-zenburn t)
 
 ; ruby mode
-(push (concat emacs-dir "/ruby-mode") load-path)
-(require 'ruby-mode)
+; (push (concat emacs-dir "/ruby-mode") load-path)
+; (require 'ruby-mode)
 
 ; go mode
 (push (concat emacs-dir "/go-mode") load-path)
 (require 'go-mode-autoloads)
-
 (defun my-go-mode-hook ()
   (setq tab-width 4)
   (setq indent-tabs-mode nil)
@@ -49,32 +52,37 @@
   (local-set-key "\C-cj" 'godef-jump)
   (local-set-key "\C-cJ" 'godef-jump-other-window)
 )
+(setq gofmt-command "goimports")
 (add-hook 'go-mode-hook 'my-go-mode-hook)
 (add-hook 'before-save-hook #'gofmt-before-save)
 
 ; protobuf mode
-(require 'protobuf-mode)
+; (require 'protobuf-mode)
 
 ; markdown mode
-; (autoload 'markdown-mode "markdown-mode"
-;    "Major mode for editing Markdown files" t)
-;    (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
-;    (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+; https://jblevins.org/projects/markdown-mode/
+(autoload 'markdown-mode "markdown-mode"
+    "Major mode for editing Markdown files" t)
+    (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+    (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+(autoload 'gfm-mode "markdown-mode"
+   "Major mode for editing GitHub Flavored Markdown files" t)
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 
 ; ============================== org mode ==============================
-(push (concat emacs-dir "/org-mode/lisp") load-path)
-(require 'org)
-
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((sh . t)
-   (org . t)
-   (emacs-lisp . t)
-   (ruby . t)
-   (R . t)
-   (gnuplot . t)))
-
-(setq org-confirm-babel-evaluate nil)
+; (push (concat emacs-dir "/org-mode/lisp") load-path)
+; (require 'org)
+;
+; (org-babel-do-load-languages
+;  'org-babel-load-languages
+;  '((sh . t)
+;    (org . t)
+;    (emacs-lisp . t)
+;    (ruby . t)
+;    (R . t)
+;    (gnuplot . t)))
+;
+; (setq org-confirm-babel-evaluate nil)
 ; ============================= /org mode ==============================
 
 
@@ -98,11 +106,6 @@
 	 ("\\.rb$"  . ruby-mode)
 	 ) auto-mode-alist))
 
-(require 'cl)
-(menu-bar-mode nil)
-(line-number-mode 1)
-(setq column-number-mode t)
-
 ;; global key mappings
 ;; 
 ; looks better but doesn't appear to work: (global-set-key [(control c) (control b)] 'josh-buffer-menu)
@@ -114,8 +117,6 @@
 (define-key global-map "\C-x`" 'next-error)
 (define-key global-map "\C-x~" 'goto-line)
 (define-key global-map [delete] 'delete-char)
-(define-key global-map "\M-[" 'backward-paragraph)
-(define-key global-map "\M-]" 'forward-paragraph)
 (add-hook 'lisp-mode-hook '(lambda ()
       (local-set-key (kbd "RET") 'newline-and-indent)))
       (define-key global-map (kbd "RET") 'newline-and-indent)
@@ -358,10 +359,45 @@ Pop up the buffer containing MARKER and scroll to MARKER if we ask the user."
 (add-hook 'java-mode-hook 'flip-java-style-hook)
 
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ansi-color-names-vector
+   ["#313131" "#D9A0A0" "#8CAC8C" "#FDECBC" "#99DDE0" "#E090C7" "#A0EDF0" "#DCDCCC"])
+ '(custom-safe-themes
+   '("d19f00fe59f122656f096abbc97f5ba70d489ff731d9fa9437bac2622aaa8b89" "f34b107e8c8443fe22f189816c134a2cc3b1452c8874d2a4b2e7bb5fe681a10b" "b9b7551ad28ec3453c7ace2de0e21f4eef1c4b7d289c7b253b902f8df7f77b60" default))
+ '(fci-rule-color "#5E5E5E")
  '(font-lock-maximum-decoration nil)
- '(widget-use-overlay-change t)
- '(w3-user-colors-take-precedence t))
-(custom-set-faces)
+ '(vc-annotate-background "#202020")
+ '(vc-annotate-color-map
+   '((20 . "#C99090")
+     (40 . "#D9A0A0")
+     (60 . "#ECBC9C")
+     (80 . "#DDCC9C")
+     (100 . "#EDDCAC")
+     (120 . "#FDECBC")
+     (140 . "#6C8C6C")
+     (160 . "#8CAC8C")
+     (180 . "#9CBF9C")
+     (200 . "#ACD2AC")
+     (220 . "#BCE5BC")
+     (240 . "#CCF8CC")
+     (260 . "#A0EDF0")
+     (280 . "#79ADB0")
+     (300 . "#89C5C8")
+     (320 . "#99DDE0")
+     (340 . "#9CC7FB")
+     (360 . "#E090C7")))
+ '(vc-annotate-very-old-color "#E090C7")
+ '(w3-user-colors-take-precedence t)
+ '(widget-use-overlay-change t t))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 
 ;; cribbed from http://www.tardis.ed.ac.uk/~skx/win/.emacs
 ;;;;;;;;;;;;;
