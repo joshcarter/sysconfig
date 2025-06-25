@@ -2,6 +2,7 @@
 [ -z "$PS1" ] && return
 
 export PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin
+# export TERM=xterm-256color
 
 if [ -d "$HOME/Library/SysConfig" ]; then
    source "$HOME/Library/SysConfig/bash/dir_history.sh"
@@ -29,12 +30,32 @@ if [ -d "/Developer/usr/bin" ]; then
    export PATH=$PATH:/Developer/usr/bin
 fi
 
+if [ -d "/Applications/Postgres.app/Contents/Versions/latest/bin" ]; then
+   export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin
+fi
+
+if [ -d "$HOME/Library/Python/3.8/bin" ]; then
+   export PATH=$PATH:$HOME/Library/Python/3.8/bin
+fi
+
+if [ -d "$HOME/Library/Python/2.7/bin" ]; then
+   export PATH=$PATH:$HOME/Library/Python/2.7/bin
+fi
+
 if [ -d "/Library/Java/Home" ]; then
    export JAVA_HOME=/Library/Java/Home
 fi
 
+if [ -d "/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home" ]; then
+    export JAVA_HOME=/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
+fi
+
 if [ -d "$HOME/Library/Application Support/TextMate/PlugIns/AckMate.tmplugin/Contents/Resources" ]; then
     alias ack="$HOME/Library/Application\ Support/TextMate/PlugIns/AckMate.tmplugin/Contents/Resources/ackmate_ack"
+fi
+
+if [ -d "$HOME/.krew/bin" ]; then
+   export PATH=$PATH:$HOME/.krew/bin
 fi
 
 # Don't put duplicate lines in the history
@@ -55,10 +76,10 @@ if [ -f "$HOME/.p4config" ]; then
 fi
 
 export EDITOR=emacs
-export JRUBY_OPTS=--1.9
 
 alias l="ls -lh"
 alias la="ls -lah"
+alias k=kubectl
 
 function shortpath
 {
@@ -91,6 +112,14 @@ function torguerizer {
   fi;
 }
 
-PS1='`torguerizer` ∴ '
+# PS1='`torguerizer` ∴ '
+export PROMPT_DIRTRIM=1
 
-[[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm && rvm use 1.9.3
+
+# [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm && rvm use 2.4.0
+# export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+# Current Go project
+export GOPATH=$HOME/Projects/go
+
+source /Users/josh/Library/Preferences/org.dystroy.broot/launcher/bash/br

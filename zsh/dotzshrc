@@ -1,0 +1,71 @@
+autoload -Uz is-at-least
+
+function has() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+export EDITOR=emacs
+export GOPATH=$HOME/Projects/go
+export GOPRIVATE="github.com/SpectraLogic/*,github.com/spectralogic/*"
+export GOROOT="/usr/local/go"
+export STARSHIP_CONFIG=$HOME/.starship.toml
+
+if [ -d "/usr/local/go/bin" ]; then
+   export PATH=$PATH:/usr/local/go/bin
+   export CGO_ENABLED=1
+fi
+
+if [ -d "/Library/Frameworks/Python.framework/Versions/3.11/bin" ]; then
+   export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
+fi
+
+if [ -d "$GOPATH/bin" ]; then
+    export PATH=$PATH:$GOPATH/bin
+fi
+
+if [ -d "/Applications/Postgres.app/Contents/Versions/latest/bin" ]; then
+    export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin
+fi
+
+# make / and _ word separators
+WORDCHARS=${WORDCHARS/\/}
+WORDCHARS=${WORDCHARS/_}
+
+# autoload -U promptinit; promptinit
+# PROMPT='%F{055}%3~%f %F{129}%B∴%b%f '
+
+# some other good options:
+# from: https://scriptingosx.com/2019/07/moving-to-zsh-06-customizing-the-zsh-prompt/
+# PROMPT='%(?.%F{green}√.%F{red}?%?)%f %B%F{240}%3~%f%b %# '
+# RPROMPT='%*'
+
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/Users/josh/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/Users/josh/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/Users/josh/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/Users/josh/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+if has starship; then
+  eval "$(starship init zsh)"
+fi
+
+if has lsd; then
+  alias l="lsd -lh"
+  alias ll="lsd -lh"
+  alias la="lsd -lah"
+  alias ls="lsd"
+fi
+
+if has kubectl; then
+  alias k=kubectl
+fi
