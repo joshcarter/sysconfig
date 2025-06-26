@@ -33,7 +33,7 @@
 (add-to-list 'custom-theme-load-path (concat emacs-dir "/themes"))
 (require 'color-theme)
 (color-theme-initialize)
-(load-theme 'hc-zenburn t)
+(load-theme 'gruvbox t)
 
 ; ruby mode
 ; (push (concat emacs-dir "/ruby-mode") load-path)
