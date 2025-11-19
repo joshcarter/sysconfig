@@ -122,4 +122,3 @@ export PROMPT_DIRTRIM=1
 # Current Go project
 export GOPATH=$HOME/Projects/go
 
-source /Users/josh/Library/Preferences/org.dystroy.broot/launcher/bash/br
