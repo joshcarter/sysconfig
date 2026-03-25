@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(emacs:*)",
+      "Bash(git -C /Users/josh/Library/SysConfig log --oneline -20)",
+      "WebSearch",
+      "WebFetch(domain:melpa.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}
