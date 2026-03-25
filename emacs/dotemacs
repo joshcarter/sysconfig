@@ -1,129 +1,257 @@
-;;    Directories
-;;
+;;; dotemacs --- Josh's Emacs configuration  -*- lexical-binding: t; -*-
+
+;; Requires Emacs 29+ (for use-package, eglot, etc.)
+
+;;; Directories
+
 (defvar home-dir (concat (expand-file-name "~") "/"))
 
-; Linux systems
-(if (file-exists-p (concat home-dir "/sysconfig/emacs"))
-    (defvar emacs-dir (concat home-dir "/sysconfig/emacs")))
-
-; Mac
-(if (file-exists-p (concat home-dir "/Library/SysConfig/emacs"))
-    (defvar emacs-dir (concat home-dir "/Library/SysConfig/emacs")))
+(defvar emacs-dir
+  (cond
+   ((file-exists-p (concat home-dir "Library/SysConfig/emacs"))
+    (concat home-dir "Library/SysConfig/emacs"))
+   ((file-exists-p (concat home-dir "sysconfig/emacs"))
+    (concat home-dir "sysconfig/emacs"))
+   (t (error "Cannot find emacs config directory"))))
 
 (push emacs-dir load-path)
+
+;;; Package management (MELPA + use-package)
+
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+;; Bootstrap: refresh archive on first run so use-package can find packages
+(unless package-archive-contents
+  (package-refresh-contents))
+
+(require 'use-package-ensure)
+(setq use-package-always-ensure t)
+
+;;; Load personal functions
+
 (load-file (concat emacs-dir "/josh-addons.el"))
 
-; defaults
-; (menu-bar-mode -1)
+;;; Defaults
+
 (setq inhibit-splash-screen t)
 (line-number-mode 1)
 (column-number-mode 1)
-; (global-hl-line-mode 1)
 
 (setq-default c-basic-offset 4)
 (setq-default tab-width 4)
 (setq-default indent-tabs-mode nil)
 
-; xterm-color from https://github.com/atomontage/xterm-color
-(push (concat emacs-dir "/xterm-color") load-path)
-(require 'xterm-color)
+(setq major-mode 'text-mode)
+(add-hook 'text-mode-hook
+  (function (lambda ()
+    "jet's additions to text-mode"
+    (setq tab-width 2)
+    (turn-on-auto-fill))))
 
-; color theme
-(push (concat emacs-dir "/color-theme") load-path)
-(add-to-list 'custom-theme-load-path (concat emacs-dir "/themes"))
-(require 'color-theme)
-(color-theme-initialize)
-(load-theme 'gruvbox t)
+(setq sentence-end "[.?!][]\"')]*\\($\\|\t\\| \\)[ \t\n]*")
+(setq sentence-end-double-space nil)
+(setq truncate-partial-width-windows nil)
 
-; ruby mode
-; (push (concat emacs-dir "/ruby-mode") load-path)
-; (require 'ruby-mode)
+;;; Backup configuration
 
-; go mode
-(push (concat emacs-dir "/go-mode") load-path)
-(require 'go-mode-autoloads)
-(defun my-go-mode-hook ()
-  (setq tab-width 4)
-  (setq indent-tabs-mode nil)
-  (local-set-key "\C-cia" 'go-import-add)
-  (local-set-key "\C-cid" 'go-remove-unused-imports)
-  (local-set-key "\C-cd" 'godoc-at-point)
-  (local-set-key "\C-cD" 'godoc)
-  (local-set-key "\C-cj" 'godef-jump)
-  (local-set-key "\C-cJ" 'godef-jump-other-window)
-)
-(setq gofmt-command "goimports")
-(add-hook 'go-mode-hook 'my-go-mode-hook)
-(add-hook 'before-save-hook #'gofmt-before-save)
+(defconst use-backup-dir t)
+(setq backup-directory-alist (quote ((".*" . "~/Backup/")))
+      version-control t
+      kept-new-versions 2
+      kept-old-versions 2
+      delete-old-versions t
+      history-delete-duplicates t
+      history-length 100
+      dired-listing-switches "-l"
+      dired-recursive-deletes 'top
+      dired-recursive-copies 'top
+      backup-by-copying-when-linked t)
 
-; protobuf mode
-; (require 'protobuf-mode)
+;;; Custom file (keep M-x customize output out of dotemacs)
 
-; markdown mode
-; https://jblevins.org/projects/markdown-mode/
-(autoload 'markdown-mode "markdown-mode"
-    "Major mode for editing Markdown files" t)
-    (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
-    (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
-(autoload 'gfm-mode "markdown-mode"
-   "Major mode for editing GitHub Flavored Markdown files" t)
-(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+(setq custom-file (concat emacs-dir "/custom.el"))
+(when (file-exists-p custom-file)
+  (load custom-file))
 
-; ============================== org mode ==============================
-; (push (concat emacs-dir "/org-mode/lisp") load-path)
-; (require 'org)
-;
-; (org-babel-do-load-languages
-;  'org-babel-load-languages
-;  '((sh . t)
-;    (org . t)
-;    (emacs-lisp . t)
-;    (ruby . t)
-;    (R . t)
-;    (gnuplot . t)))
-;
-; (setq org-confirm-babel-evaluate nil)
-; ============================= /org mode ==============================
+;;; Theme
 
+(use-package gruvbox-theme
+  :config
+  (load-theme 'gruvbox-dark-medium t))
 
-; TODO: (if (null window-system) ()) ..more here..
+;;; Completion (company-mode integrates with eglot automatically)
 
-; cc mode (more style stuff further down)
-(push (concat emacs-dir "/cc-mode") load-path)
-(require 'cc-mode)
-(autoload 'c++-mode  "cc-mode" "C++ Editing Mode" t)
-(autoload 'c-mode    "cc-mode" "C Editing Mode" t)
+(use-package company
+  :hook (after-init . global-company-mode))
+
+;;; Which-key (keybinding discoverability)
+
+(use-package which-key
+  :config
+  (which-key-mode))
+
+;;; xterm-color
+
+(use-package xterm-color
+  :defer t)
+
+;;; Eglot (LSP) -- built-in Emacs 29+
+;; Provides: M-. (jump-to-def), M-? (find-references), M-, (jump-back),
+;;           eldoc hover, flymake diagnostics, company completions
+;; Servers: gopls (Go), pyright (Python), clangd (C/C++)
+
+(use-package eglot
+  :ensure nil
+  :hook ((go-mode . eglot-ensure)
+         (python-mode . eglot-ensure)
+         (c-mode . eglot-ensure)
+         (c++-mode . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               '(python-mode . ("pyright-langserver" "--stdio"))))
+
+;;; Go mode
+
+(use-package go-mode
+  :mode "\\.go\\'"
+  :config
+  (setq gofmt-command "goimports")
+  (defun my-go-mode-hook ()
+    (setq tab-width 4)
+    (setq indent-tabs-mode nil))
+  (add-hook 'go-mode-hook #'my-go-mode-hook)
+  (add-hook 'before-save-hook #'gofmt-before-save))
+
+;;; Markdown mode
+
+(use-package markdown-mode
+  :mode (("\\.markdown\\'" . markdown-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("README\\.md\\'" . gfm-mode)))
+
+;;; C/C++ (built-in cc-mode, no require needed)
+
+(with-eval-after-load 'cc-mode
+  (nconc c-style-alist
+    '(("josh"
+       (c-basic-offset . 4)
+       (c-tab-always-indent . nil)
+       (c-hanging-comment-ender-p . nil)
+       (c-offsets-alist . (
+                           (case-label . +2)
+                           (access-label . -2)
+                           (label . 0)
+                           (defun-block-intro . +)
+                           (statement-block-intro . +)
+                           (statement-case-intro . +2)
+                           (statement-case-open . +2)
+                           (substatement-open . 0)
+                           (inline-open . 0)
+                           (block-open . -)
+                           (brace-list-intro . 0)
+                           (brace-list-entry . +))))))
+
+  (defun c-semi&comma-no-newlines-before-nonblanks ()
+    (save-excursion
+      (if (and (eq last-command-event ?\;)
+               (zerop (forward-line 1))
+               (not (looking-at "^[ \t]*$")))
+          'stop
+        nil)))
+
+  (setq c-hanging-semi&comma-criteria
+        (list 'c-semi&comma-no-newlines-before-nonblanks
+              'c-semi&comma-inside-parenlist
+              'c-semi&comma-no-newlines-for-oneline-inliners))
+
+  (defun flip-c-style-hook ()
+    (c-set-style "josh")
+    (setq c-auto-newline nil)
+    (turn-on-auto-fill)
+    (setq tab-width 4)
+    (setq indent-tabs-mode nil)
+    (setq c-tab-always-indent nil)
+    (setq comment-multi-line t)
+    (setq c-comment-continuation-stars "* ")
+    (define-key c-mode-base-map "\C-m" 'c-context-line-break))
+  (add-hook 'c-mode-common-hook #'flip-c-style-hook))
+
+;;; Java
+
+(with-eval-after-load 'cc-mode
+  (c-add-style "java-josh"
+               (list '(c-basic-offset . 4)
+                     '(c-comment-only-line-offset 0 . 0)
+                     '(c-hanging-comment-starter-p . t)
+                     (list 'c-offsets-alist
+                           '(access-label . 0)
+                           '(arglist-close . c-lineup-arglist)
+                           '(arglist-intro . c-lineup-arglist-intro-after-paren)
+                           '(block-close . 0)
+                           '(class-open . 0)
+                           '(class-close . 0)
+                           '(defun-block-intro . +)
+                           '(func-decl-cont . c-lineup-java-throws)
+                           '(inher-cont . c-lineup-java-inher)
+                           '(inline-open . 0)
+                           '(knr-argdecl-intro . 5)
+                           '(label . 0)
+                           '(statement-block-intro . +)
+                           '(statement-case-open . +)
+                           '(statement-cont . +)
+                           '(substatement-open . 0)
+                           '(topmost-intro . 0)
+                           '(topmost-intro-cont . +))))
+
+  (defun flip-java-style-hook ()
+    (c-set-style "java-josh")
+    (setq c-auto-newline t)
+    (turn-on-auto-fill)
+    (setq tab-width 4)
+    (setq c-tab-always-indent nil)
+    (setq comment-multi-line t)
+    (setq c-comment-continuation-stars "* "))
+  (add-hook 'java-mode-hook #'flip-java-style-hook))
+
+;;; C/C++ auto-mode-alist
 
 (setq auto-mode-alist
       (append
        '(("\\.C$"   . c++-mode)
-	 ("\\.H$"   . c++-mode)
-	 ("\\.cc$"  . c++-mode)
-	 ("\\.cpp$" . c++-mode)
-	 ("\\.hh$"  . c++-mode)
-	 ("\\.c$"   . c-mode)
-	 ("\\.h$"   . c++-mode)
-	 ("\\.rb$"  . ruby-mode)
-	 ) auto-mode-alist))
+         ("\\.H$"   . c++-mode)
+         ("\\.cc$"  . c++-mode)
+         ("\\.cpp$" . c++-mode)
+         ("\\.hh$"  . c++-mode)
+         ("\\.c$"   . c-mode)
+         ("\\.h$"   . c++-mode))
+       auto-mode-alist))
 
-;; global key mappings
-;; 
-; looks better but doesn't appear to work: (global-set-key [(control c) (control b)] 'josh-buffer-menu)
+;;; Global keybindings
+
 (define-key global-map "\C-x\C-b" 'josh-buffer-menu)
 (define-key global-map "\e#" 'replace-string)
 (define-key global-map "\C-xz" 'repeat-complex-command)
 (define-key global-map "\C-xc" 'compile)
-;(define-key global-map "\C-x\C-c" 'compile)	; overrides emacs quit
 (define-key global-map "\C-x`" 'next-error)
 (define-key global-map "\C-x~" 'goto-line)
 (define-key global-map [delete] 'delete-char)
-(add-hook 'lisp-mode-hook '(lambda ()
+(add-hook 'lisp-mode-hook (lambda ()
       (local-set-key (kbd "RET") 'newline-and-indent)))
-      (define-key global-map (kbd "RET") 'newline-and-indent)
+(define-key global-map (kbd "RET") 'newline-and-indent)
 
-;------------------------------------------------------------------------------------------
-; Compilation mode
-;------------------------------------------------------------------------------------------
+;;; Match-paren on backtick
+
+(global-set-key "`" 'match-paren)
+(defun match-paren (arg)
+  "Go to the matching parenthesis if on parenthesis otherwise insert `."
+  (interactive "p")
+  (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+        ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+        (t (self-insert-command (or arg 1)))))
+
+;;; Compilation
 
 (setq compilation-scroll-output t)
 
@@ -133,321 +261,4 @@
   (let ((compile-command compile-command))
     (call-interactively 'compile)))
 
-(defun find-buffer-visiting-nondirectory (filename)
-  "Return the buffer visiting filename. Like find-buffer-visiting, but filename is not expanded."
-  (let ((buffer nil)
-        (buf-list (buffer-list))
-        buf-filename)
-    (while (and buf-list (null buffer))
-      (setq buf-filename (buffer-file-name (car buf-list)))
-      (cond
-       ((null buf-filename)
-        (setq buf-list (cdr buf-list)))
-       ((equal (file-name-nondirectory buf-filename) filename)
-        (setq buffer (car buf-list)))
-       (t
-        (setq buf-list (cdr buf-list)))))
-    buffer))
-
-(defun compilation-find-file (marker filename directory &rest formats)
-  "Find a buffer for file FILENAME.
-Modified from the default in compile.el to use the tags table.
-Search the directories in `compilation-search-path'.
-A nil in `compilation-search-path' means to try the
-\"current\" directory, which is passed in DIRECTORY.
-If DIRECTORY. is relative, it is combined with `default-directory'.
-If DIRECTORY. is nil, that means use `default-directory'.
-If FILENAME is not found in the search path, check the currently open buffers.
-If FILENAME is still not found, try to find it in the tags table.
-If FILENAME is not found at all, ask the user where to find it.
-Pop up the buffer containing MARKER and scroll to MARKER if we ask the user."
-  (or formats (setq formats '("%s")))
-  (let ((dirs compilation-search-path)
-        (spec-dir (if directory
-                      (expand-file-name directory)
-                    default-directory))
-        buffer thisdir fmts name)
-    (if (file-name-absolute-p filename)
-        ;; The file name is absolute.  Use its explicit directory as
-        ;; the first in the search path, and strip it from FILENAME.
-        (setq filename (abbreviate-file-name (expand-file-name filename))
-              dirs (cons (file-name-directory filename) dirs)
-              filename (file-name-nondirectory filename)))
-    ;; Now search the path.
-    (while (and dirs (null buffer))
-      (setq thisdir (or (car dirs) spec-dir)
-            fmts formats)
-      ;; For each directory, try each format string.
-      (while (and fmts (null buffer))
-        (setq name (expand-file-name (format (car fmts) filename) thisdir)
-              buffer (and (file-exists-p name)
-                          (find-file-noselect name))
-              fmts (cdr fmts)))
-      (setq dirs (cdr dirs)))
-    ;; Strip out any partial path
-    (setq filename (car (last (split-string filename "/"))))
-    ;; Check whether an existing buffer contains the file
-    (when (null buffer)
-      (setq buffer (find-buffer-visiting-nondirectory filename)))
-    ;; If still not found, try the tags table
-    (when (null buffer)
-      (setq buffer (find-tag-noselect filename)))
-    (while (null buffer)    ;Repeat until the user selects an existing file.
-      ;; The file doesn't exist.  Ask the user where to find it.
-      (save-excursion            ;This save-excursion is probably not right.
-        (let ((pop-up-windows t))
-          (compilation-set-window (display-buffer (marker-buffer marker))
-                                  marker)
-          (let* ((name (read-file-name
-                        (format "Find this %s in (default %s): "
-                                compilation-error filename)
-                        spec-dir filename t nil))
-                 (origname name))
-            (cond
-             ((not (file-exists-p name))
-              (message "Cannot find file `%s'" name)
-              (ding) (sit-for 2))
-             ((and (file-directory-p name)
-                   (not (file-exists-p
-                         (setq name (expand-file-name filename name)))))
-              (message "No `%s' in directory %s" filename origname)
-              (ding) (sit-for 2))
-             (t
-              (setq buffer (find-file-noselect name))))))))
-    ;; Make intangible overlays tangible.
-    ;; This is weird: it's not even clear which is the current buffer,
-    ;; so the code below can't be expected to DTRT here.  -- Stef
-    (dolist (ov (overlays-in (point-min) (point-max)))
-      (when (overlay-get ov 'intangible)
-        (overlay-put ov 'intangible nil)))
-    buffer))
-
-; swiped from http://www.dotemacs.de/dotfiles/JayakrishnanNair.emacs.html
-(global-set-key "`" 'match-paren)
-(defun match-paren (arg)
-  "Go to the matching parenthesis if on parenthesis otherwise insert %."
-  (interactive "p")
-  (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
-        ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
-        (t (self-insert-command (or arg 1)))))
-
-; sentence ending stuff
-(setq sentence-end "[.?!][]\"')]*\\($\\|\t\\| \\)[ \t\n]*")
-(setq sentence-end-double-space nil)
-
-;; clojure mode
-;;
-; (load-file (concat emacs-dir "/josh-clojure.el"))
-
-;; don't truncate the end of lines with multiple vert windows
-(setq truncate-partial-width-windows nil)
-
-(setq default-major-mode 'text-mode)
-(add-hook 'text-mode-hook
-  (function (lambda ()
-    "jet's additions to text-mode"
-    (setq tab-width 2)
-    (turn-on-auto-fill))))
-
-(nconc c-style-alist
-  '(("josh"
-     (c-basic-offset . 4)
-     (c-tab-always-indent . nil)
-     (c-hanging-comment-ender-p . nil)
-     (c-offsets-alist . (
-			 (case-label . +2)
-			 (access-label . -2)
-			 (label . 0)
-			 (defun-block-intro . +)
-			 (statement-block-intro . +)
-			 (statement-case-intro . +2)
-			 (statement-case-open . +2)
-			 (substatement-open . 0)
-			 (inline-open . 0)
-			 (block-open . -)
-			 (brace-list-intro . 0)
-			 (brace-list-entry . +))))))
-
-(defun c-semi&comma-no-newlines-before-nonblanks ()
-  (save-excursion
-    (if (and (eq last-command-char ?\;)
-             (zerop (forward-line 1))
-             (not (looking-at "^[ \t]*$")))
-        'stop
-      nil)))
-
-; customize auto newline mode
-(setq c-hanging-semi&comma-criteria
-      (list 'c-semi&comma-no-newlines-before-nonblanks
-			'c-semi&comma-inside-parenlist
-			'c-semi&comma-no-newlines-for-oneline-inliners))
-
-(defun flip-c-style-hook ()
-  (c-set-style "josh")
-  (setq c-auto-newline nil)
-  (turn-on-auto-fill)
-  (setq tab-width 4)
-  (setq indent-tabs-mode nil)      ; only use spaces
-  (setq c-tab-always-indent nil)
-  (setq comment-multi-line t)
-  (setq c-comment-continuation-stars "* ")
-  (define-key c-mode-base-map "\C-m" 'c-context-line-break)
-)
-(add-hook 'c-mode-common-hook 'flip-c-style-hook)
-
-; unused right now. swiped from:
-; http://www.dotemacs.de/dotfiles/JackRepenning.emacs.html
-(c-add-style "java-pure-block-aligned"
-             (list '(c-basic-offset . 4)
-                   '(c-comment-only-line-offset 0 . 0)
-                   '(c-hanging-comment-starter-p . t)
-                   (list 'c-offsets-alist
-                         '(access-label . 0)
-                         '(arglist-close . c-lineup-arglist)
-                         '(arglist-intro . c-lineup-arglist-intro-after-paren)
-                         '(block-close . 0)
-                         '(class-open . +)
-                         '(class-close . +)
-                         '(defun-block-intro . 0)
-                         '(func-decl-cont . c-lineup-java-throws)
-                         '(inher-cont . c-lineup-java-inher)
-                         '(inline-open . +)
-                         '(knr-argdecl-intro . 5)
-                         '(label . 0)
-                         '(statement-block-intro . 0)
-                         '(statement-case-open . +)
-                         '(statement-cont . +)
-                         '(substatement-open . +)
-                         '(topmost-intro . -)
-                         '(topmost-intro-cont . +)
-                         )))
-
-(c-add-style "java-josh"
-             (list '(c-basic-offset . 4)
-                   '(c-comment-only-line-offset 0 . 0)
-                   '(c-hanging-comment-starter-p . t)
-                   (list 'c-offsets-alist
-                         '(access-label . 0)
-                         '(arglist-close . c-lineup-arglist)
-                         '(arglist-intro . c-lineup-arglist-intro-after-paren)
-                         '(block-close . 0)
-                         '(class-open . 0)
-                         '(class-close . 0)
-                         '(defun-block-intro . +)
-                         '(func-decl-cont . c-lineup-java-throws)
-                         '(inher-cont . c-lineup-java-inher)
-                         '(inline-open . 0)
-                         '(knr-argdecl-intro . 5)
-                         '(label . 0)
-                         '(statement-block-intro . +)
-                         '(statement-case-open . +)
-                         '(statement-cont . +)
-                         '(substatement-open . 0)
-                         '(topmost-intro . 0)
-                         '(topmost-intro-cont . +)
-                         )))
-
-(defun flip-java-style-hook ()
-  (c-set-style "java-josh")
-  (setq c-auto-newline t)
-  (turn-on-auto-fill)
-  (setq tab-width 4)
-  (setq c-tab-always-indent nil)
-  (setq comment-multi-line t)
-  (setq c-comment-continuation-stars "* ")
-)
-(add-hook 'java-mode-hook 'flip-java-style-hook)
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector
-   ["#313131" "#D9A0A0" "#8CAC8C" "#FDECBC" "#99DDE0" "#E090C7" "#A0EDF0" "#DCDCCC"])
- '(custom-safe-themes
-   '("d19f00fe59f122656f096abbc97f5ba70d489ff731d9fa9437bac2622aaa8b89" "f34b107e8c8443fe22f189816c134a2cc3b1452c8874d2a4b2e7bb5fe681a10b" "b9b7551ad28ec3453c7ace2de0e21f4eef1c4b7d289c7b253b902f8df7f77b60" default))
- '(fci-rule-color "#5E5E5E")
- '(font-lock-maximum-decoration nil)
- '(vc-annotate-background "#202020")
- '(vc-annotate-color-map
-   '((20 . "#C99090")
-     (40 . "#D9A0A0")
-     (60 . "#ECBC9C")
-     (80 . "#DDCC9C")
-     (100 . "#EDDCAC")
-     (120 . "#FDECBC")
-     (140 . "#6C8C6C")
-     (160 . "#8CAC8C")
-     (180 . "#9CBF9C")
-     (200 . "#ACD2AC")
-     (220 . "#BCE5BC")
-     (240 . "#CCF8CC")
-     (260 . "#A0EDF0")
-     (280 . "#79ADB0")
-     (300 . "#89C5C8")
-     (320 . "#99DDE0")
-     (340 . "#9CC7FB")
-     (360 . "#E090C7")))
- '(vc-annotate-very-old-color "#E090C7")
- '(w3-user-colors-take-precedence t)
- '(widget-use-overlay-change t t))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
-;; cribbed from http://www.tardis.ed.ac.uk/~skx/win/.emacs
-;;;;;;;;;;;;;
-;;
-;;  Make sure that backups only happen in the directory ~/Backup
-;; This is a dead handy piece of code.
-;;
-;;
-;; (fset 'orthodox-make-backup-file-name
-;;       (symbol-function 'make-backup-file-name))
-;;
-;; (defun make-bak (file)
-;;   "Intended for (fset 'make-backup-file-name 'make-bak)."
-;;   (let* ((file-dir (abbreviate-file-name (or (file-name-directory file)
-;;                               default-directory)))
-;;       ;; Using default-directory is necessary there because
-;;       ;; 'file-name-directory returns nil on a relative path. I assume
-;;       ;; this is why orthodox (find-backup-file-name "gug") fails.
-;;       (backup-dir (concat (getenv "HOME") "/Backup/")))
-;;     (or (file-directory-p backup-dir)
-;;      (make-directory backup-dir)
-;;      ;; Creating parents shouldn't be necessary, so it's better not to
-;;      ;; enable it; if 'make-directory barfs then something's wrong.
-;;      )
-;;     (concat backup-dir (file-name-nondirectory file))))
-;;
-;; (defun bak-p (file)
-;;   "Intended for (fset 'backup-file-name-p 'bak-p)."
-;;   ;; Dired.el[2040] v19.34.1 doesn't call backup-file-name-p
-;;   ;; unless the final char of the file name looks like it
-;;   ;; might be appropriate for that; this is claimed needed
-;;   ;; for efficiency. Therefore, some dired functions won't
-;;   ;; work right with the new format. Egrep reveals no
-;;   ;; other grief, & I've never used those dired functions.
-;;   (string-match "Bak[/\\]" file))
-;;
-;; (fset 'make-backup-file-name 'make-bak)
-;; (fset 'backup-file-name-p 'bak-p) 
-
-;; from http://bc.tech.coop/blog/080128.html
-(defconst use-backup-dir t)   
-(setq backup-directory-alist (quote ((".*" . "~/Backup/")))
-      version-control t                ; Use version numbers for backups
-      kept-new-versions 2              ; Number of newest versions to keep
-      kept-old-versions 2              ; Number of oldest versions to keep
-      delete-old-versions t            ; Delete excess backup versions
-      history-delete-duplicates t      ; Delete dups in history
-      history-length 100               ; Larger history size than default 30
-      inhibit-splash-screen t          ; No initial splash screen
-      dired-listing-switches "-l"      ; Don't display dot files
-      dired-recursive-deletes 'top     ; Recursive deletes
-      dired-recursive-copies 'top      ; Recursive copies
-      backup-by-copying-when-linked t) ; Copy linked files, don't rename
+;;; dotemacs ends here
