@@ -69,3 +69,4 @@ fi
 if has kubectl; then
   alias k=kubectl
 fi
+export PATH="$HOME/.local/bin:$PATH"
