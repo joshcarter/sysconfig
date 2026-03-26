@@ -12,11 +12,6 @@ export STARSHIP_CONFIG=$HOME/.starship.toml
 
 if [ -d "/usr/local/go/bin" ]; then
    export PATH=$PATH:/usr/local/go/bin
-   export CGO_ENABLED=1
-fi
-
-if [ -d "/Library/Frameworks/Python.framework/Versions/3.11/bin" ]; then
-   export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
 fi
 
 if [ -d "$GOPATH/bin" ]; then
@@ -69,4 +64,8 @@ fi
 if has kubectl; then
   alias k=kubectl
 fi
+
 export PATH="$HOME/.local/bin:$PATH"
+
+# API tokens and whatnot go into .secrets file
+[[ -f ~/.secrets ]] && source ~/.secrets
