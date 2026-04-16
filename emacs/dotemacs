@@ -81,6 +81,12 @@
   :config
   (load-theme 'doom-Iosvkem t))
 
+(defun light ()
+  "Switch to doom-acario-light for outdoor use."
+  (interactive)
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme 'doom-acario-light t))
+
 ;;; Completion (company-mode integrates with eglot automatically)
 
 (use-package company
