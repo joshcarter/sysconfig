@@ -54,6 +54,11 @@
 (setq sentence-end-double-space nil)
 (setq truncate-partial-width-windows nil)
 
+;; Keep the Emacs kill ring separate from the macOS system clipboard.
+;; Kills (C-w/M-w) no longer overwrite the system paste buffer; use
+;; clipboard-kill-ring-save / clipboard-yank explicitly when you want it.
+(setq select-enable-clipboard nil)
+
 ;;; Backup configuration
 
 (defconst use-backup-dir t)
@@ -92,9 +97,11 @@
   (load-theme 'doom-Iosvkem t))
 
 ;;; Completion (company-mode integrates with eglot automatically)
-
-(use-package company
-  :hook (after-init . global-company-mode))
+; 
+; (use-package company
+;   :hook (after-init . global-company-mode)
+;   :config
+;   (setq company-idle-delay nil))   ; never pop up automatically; trigger with C-M-i
 
 ;;; Which-key (keybinding discoverability)
 
@@ -278,3 +285,5 @@
     (call-interactively 'compile)))
 
 ;;; dotemacs ends here
+
+
