@@ -119,15 +119,37 @@
 ;;           eldoc hover, flymake diagnostics, company completions
 ;; Servers: gopls (Go), pyright (Python), clangd (C/C++)
 
+;; LSP is opt-in: start it with `M-x eglot` in a buffer when you want it.
+;; (Auto-starting it on every file open was adding ~10s to startup while
+;; the language server scanned the project.  See git history if you want
+;; the old `eglot-ensure' hooks back.)
 (use-package eglot
   :ensure nil
-  :hook ((go-mode . eglot-ensure)
-         (python-mode . eglot-ensure)
-         (c-mode . eglot-ensure)
-         (c++-mode . eglot-ensure))
+  :defer t
   :config
+  (setq eglot-sync-connect nil        ; never block the UI waiting to connect
+        eglot-autoshutdown t          ; shut the server down with its last buffer
+        eglot-events-buffer-size 0)   ; skip the per-server event log overhead
   (add-to-list 'eglot-server-programs
                '(python-mode . ("pyright-langserver" "--stdio"))))
+
+;; Alternative: auto-start LSP on file open, but asynchronously so the
+;; buffer appears instantly and diagnostics/completion light up a second
+;; or two later in the background.  Delete the `:defer t' line above (and
+;; ideally the opt-in comment) and uncomment this to try it.
+;;
+;; (use-package eglot
+;;   :ensure nil
+;;   :hook ((go-mode    . eglot-ensure)
+;;          (python-mode . eglot-ensure)
+;;          (c-mode      . eglot-ensure)
+;;          (c++-mode    . eglot-ensure))
+;;   :config
+;;   (setq eglot-sync-connect nil        ; never block the UI waiting to connect
+;;         eglot-autoshutdown t          ; shut the server down with its last buffer
+;;         eglot-events-buffer-size 0)   ; skip the per-server event log overhead
+;;   (add-to-list 'eglot-server-programs
+;;                '(python-mode . ("pyright-langserver" "--stdio"))))
 
 ;;; Go mode
 
